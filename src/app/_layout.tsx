@@ -1,17 +1,21 @@
+import { Stack, ThemeProvider } from 'expo-router';
 import '../../global.css';
-import { Stack,ThemeProvider} from 'expo-router';
 
+import { NAV_THEME } from '@/lib/theme'; // adjust path to wherever you saved theme.ts
 import { PortalHost } from '@rn-primitives/portal';
 import { useColorScheme } from 'nativewind';
-import { NAV_THEME } from '@/lib/theme'; // adjust path to wherever you saved theme.ts
+
 
 export default function RootLayout() {
-  const { colorScheme } = useColorScheme();
+  const { colorScheme, setColorScheme } = useColorScheme();
+  
 
   return (
-    <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
+
+    <ThemeProvider value={NAV_THEME[colorScheme === 'dark' ? 'dark' : 'light']}>
       <Stack />
       <PortalHost />
     </ThemeProvider>
+    
   );
 }

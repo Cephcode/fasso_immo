@@ -34,12 +34,13 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true,
-       "tsconfigPaths": true
+      "tsconfigPaths": true
     },
     "extra": {
       "router": {},

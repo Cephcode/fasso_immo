@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "dependencies": {
     "@expo/ui": "~57.0.8",
+    "@expo/vector-icons": "^15.1.1",
     "@react-navigation/native": "^7.3.14",
     "@rn-primitives/label": "^1.5.2",
     "@rn-primitives/portal": "^1.5.2",

@@ -10,9 +10,7 @@ export default function Layout() {
 
   return (
 
-    <Tabs screenOptions={{ headerShown: false, tabBarStyle: { backgroundColor: colors.background },sceneContainerStyle: {
-          backgroundColor: colors.background, // Fills the screen background
-        }, }}>
+    <Tabs screenOptions={{ headerShown: false, tabBarStyle: { backgroundColor: 'white',borderTopColor: colors.background,elevation: 0.5 } }}>
         
     <Tabs.Screen name="(home)/index" 
     options={{title : "Decouvrir",

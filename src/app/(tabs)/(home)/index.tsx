@@ -1,14 +1,25 @@
+import { PropertyList } from '@/components/ui/property-list';
+
 import Search from '@/components/ui/search';
-import { THEME } from '@/lib/theme';
+import { useListings } from '@/hooks/useListings';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View } from 'react-native';
 export default function HomeScreen() {
+  const { listings, loadingMore, refreshing, loadMore, refresh } = useListings();
   return (
     
-    <SafeAreaView style={{ flex: 1,backgroundColor: THEME.light.primaryForeground ,paddingHorizontal: 10 }}>
+    <View style={{ flex: 1,paddingHorizontal: 10 ,gap: 10 }}>
       <StatusBar/>
       <Search/>
 
-    </SafeAreaView>
+<PropertyList
+  listings={listings}
+  loadingMore={loadingMore}
+  refreshing={refreshing}
+  onEndReached={loadMore}
+  onRefresh={refresh}
+/>
+
+    </View>
   );
 }

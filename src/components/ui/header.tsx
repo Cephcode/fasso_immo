@@ -9,8 +9,8 @@ export default function Header() {
 
   return (
     <View
-      className="w-full justify-end h-20 items-center md:py-8"
-      style={[styles.shadowBox,{ shadowColor: colors.foreground , borderBottomColor: colors.background,zIndex: 10,backgroundColor: 'white' }]}
+      className="w-full justify-end min-h-20 items-center md:py-8"
+      style={[styles.shadowBox,{ shadowColor: colors.foreground , borderBottomColor: colors.background,zIndex: 10,backgroundColor: colors.background }]}
     >
       <Text className="text-3xl font-bold text-primary md:text-3xl lg:text-4xl">
         Fasso Immo

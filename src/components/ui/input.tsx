@@ -27,7 +27,7 @@ const Input = forwardRef<TextInput, InputProps>(
         <TextInput
           ref={ref}
           className={cn(
-            'dark:bg-input/30 border-input bg-background text-foreground flex h-10 w-full min-w-0 flex-row items-center rounded-full border text-base leading-5 shadow-sm shadow-black/5 sm:h-9',
+            'dark:bg-input/30 border-input bg-background text-destructive flex h-10 w-full min-w-0 flex-row items-center rounded-full border text-base leading-5 shadow-sm shadow-black/5 sm:h-9',
             props.editable === false &&
               cn(
                 'opacity-60',
@@ -45,7 +45,7 @@ const Input = forwardRef<TextInput, InputProps>(
           )}
           style={[
             leftIcon ? { paddingLeft: 40 } : undefined,
-            style, // permet de override si besoin depuis l'extérieur
+             { color: colors.destructive }
           ]}
           {...props}
         />

@@ -1,14 +1,13 @@
- import { SignUpForm } from '@/components/sign-up-form';
+ import LoginForm from '@/components/login-form';
 import { THEME } from '@/lib/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-
 import { useColorScheme } from 'nativewind';
 
 import { KeyboardAvoidingView, ScrollView, Text, View } from 'react-native';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export default function signUpPage(){
+export default function LoginPage(){
   const { colorScheme } = useColorScheme();
   const colors = colorScheme === 'dark' ? THEME.dark : THEME.light;
   const insets = useSafeAreaInsets();
@@ -35,7 +34,7 @@ export default function signUpPage(){
         <Text className="text-2xl font-bold tracking-tight text-foreground">Fasso Immo</Text>
       </View>
           <View className="w-full max-w-md self-center gap-6">
-            <SignUpForm/>
+            <LoginForm/>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

@@ -1,10 +1,10 @@
 import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,17 +14,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as React from 'react';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, TextInput, TouchableOpacity, View } from 'react-native';
 
-export function SignUpForm() {
+export default function LoginForm() {
   const router = useRouter();
   const passwordInputRef = React.useRef<TextInput>(null);
 
   // Form states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [firstName, setFirstName] = useState('');
 
   // UI states
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -38,45 +36,33 @@ export function SignUpForm() {
   async function onSubmit() {
     setErrorMessage(null);
 
-    // Validation rapide des champs
-    if (!email.trim() || !password || !firstName.trim() || !lastName.trim()) {
-      setErrorMessage('Veuillez remplir tous les champs.');
-      return;
-    }
-
-    if (password.length < 6) {
-      setErrorMessage('Le mot de passe doit contenir au moins 6 caractères.');
+    // Validation basique
+    if (!email.trim() || !password) {
+      setErrorMessage('Veuillez remplir votre email et votre mot de passe.');
       return;
     }
 
     try {
       setLoading(true);
 
-      const { data, error } = await supabase.auth.signUp({
+      // Authentification Supabase par email + mot de passe
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password,
-        options: {
-          data: {
-            first_name: firstName.trim(),
-            last_name: lastName.trim(),
-          },
-        },
       });
 
       if (error) {
-        setErrorMessage(error.message);
+        // Personnalisation éventuelle des erreurs courantes de Supabase
+        if (error.message.includes('Invalid login credentials')) {
+          setErrorMessage('Email ou mot de passe incorrect.');
+        } else {
+          setErrorMessage(error.message);
+        }
         return;
       }
 
-      // Si Supabase requiert une confirmation par email
-      if (data.user && data.session === null) {
-        Alert.alert(
-          'Compte créé !',
-          'Un email de confirmation vous a été envoyé. Veuillez vérifier votre boîte de réception.',
-          [{ text: 'OK', onPress: () => router.push('/auth/login') }]
-        );
-      } else {
-        // Redirection vers l'application si l'authentification est directe
+      // Succès -> Redirection vers l'application
+      if (data.session) {
         router.replace('/(tabs)/(home)');
       }
     } catch (err: any) {
@@ -91,10 +77,10 @@ export function SignUpForm() {
       <Card className="border-border/0 sm:border-border shadow-none sm:shadow-sm sm:shadow-black/5">
         <CardHeader>
           <CardTitle className="text-center text-xl sm:text-left text-primaryForeground">
-            Créer un compte
+            Se connecter
           </CardTitle>
           <CardDescription className="text-center sm:text-left text-primaryForeground">
-            Trouver rapidement une offre ou poster la vôtre
+            Bienvenue ! Connectez-vous à votre compte pour continuer.
           </CardDescription>
         </CardHeader>
         <CardContent className="gap-6">
@@ -109,28 +95,7 @@ export function SignUpForm() {
               </View>
             )}
 
-            <View className="gap-1.5">
-              <Label htmlFor="lastName">Noms</Label>
-              <Input
-                id="lastName"
-                placeholder="Nom..."
-                value={lastName}
-                onChangeText={setLastName}
-                returnKeyType="next"
-              />
-            </View>
-
-            <View className="gap-1.5">
-              <Label htmlFor="firstName">Prénoms</Label>
-              <Input
-                id="firstName"
-                placeholder="Prénoms..."
-                value={firstName}
-                onChangeText={setFirstName}
-                returnKeyType="next"
-              />
-            </View>
-
+            {/* Champ Email */}
             <View className="gap-1.5">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -147,9 +112,9 @@ export function SignUpForm() {
               />
             </View>
 
-            {/* Champ Mot de passe avec Icône intégrée */}
+            {/* Champ Mot de passe avec Icône de masque/démaquillage */}
             <View className="gap-1.5">
-              <View className="flex-row items-center">
+              <View className="flex-row items-center justify-between">
                 <Label htmlFor="password">Mot de passe</Label>
               </View>
               
@@ -178,6 +143,7 @@ export function SignUpForm() {
               </View>
             </View>
 
+            {/* Bouton de Soumission */}
             <Button 
               className="w-full bg-primary" 
               onPress={onSubmit}
@@ -186,18 +152,19 @@ export function SignUpForm() {
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text className="font-semibold text-primary-foreground">Continuer</Text>
+                <Text className="font-semibold text-primary-foreground">Se connecter</Text>
               )}
             </Button>
           </View>
 
+          {/* Redirection vers l'inscription */}
           <Text className="text-center text-sm text-muted-foreground">
-            Vous avez déjà un compte ?{' '}
+            Vous n'avez pas encore de compte ?{' '}
             <Text
-              onPress={() => router.push('/auth/login')}
+              onPress={() => router.push('/auth/sign-up')}
               className="text-sm font-medium text-primary underline underline-offset-4"
             >
-              Connectez-vous
+              Créez-en un
             </Text>
           </Text>
         </CardContent>

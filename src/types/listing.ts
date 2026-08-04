@@ -34,3 +34,8 @@ export interface Post {
   photos_id: { '1': string; '2': string };
   user_id: string;
 }
+
+export interface ListingOwner {
+  id:string
+  name: string;
+}

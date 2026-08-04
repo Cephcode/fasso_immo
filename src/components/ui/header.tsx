@@ -1,35 +1,45 @@
+
+import Search from '@/components/ui/search';
 import { Text } from '@/components/ui/text';
 import { THEME } from '@/lib/theme';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
 import { Platform, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function Header() {
   const { colorScheme } = useColorScheme();
   const colors = colorScheme === 'dark' ? THEME.dark : THEME.light;
+  const insets = useSafeAreaInsets();
 
   return (
     <View
-      className="w-full justify-end min-h-20 items-center md:py-8"
-      style={[styles.shadowBox,{ shadowColor: colors.foreground , borderBottomColor: colors.background,zIndex: 10,backgroundColor: colors.background }]}
+      className="w-full gap-3 px-4 pb-4"
+      style={[styles.shadowBox, { shadowColor: colors.foreground, paddingTop: insets.top + 8,backgroundColor:colors.primaryForegroundSecond}]}
     >
-      <Text className="text-3xl font-bold text-primary md:text-3xl lg:text-4xl">
-        Fasso Immo
-      </Text>
+      <View className="flex-row items-center gap-2">
+        <View className="h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+          <MaterialCommunityIcons name="home-city-outline" size={20} color={colors.primary} />
+        </View>
+        <Text className="text-2xl font-bold tracking-tight text-foreground">Fasso Immo</Text>
+      </View>
+
+      <Search/>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   shadowBox: {
-    paddingBottom: 12,
+    zIndex: 10,
     ...Platform.select({
       ios: {
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 6,
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
       },
       android: {
-        elevation: 0.5, // needs to be higher than the Stack content's elevation (default 0) to paint on top
+        elevation: 6,
       },
     }),
   },

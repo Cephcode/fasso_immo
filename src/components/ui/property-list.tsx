@@ -3,6 +3,7 @@ import { Text } from '@/components/ui/text';
 import { THEME } from '@/lib/theme';
 import type { Listing } from '@/types/listing';
 import { FlashList } from '@shopify/flash-list';
+import { router } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import { ActivityIndicator, View } from 'react-native';
 
@@ -12,8 +13,7 @@ type PropertyListProps = {
   refreshing: boolean;
   onEndReached: () => void;
   onRefresh: () => void;
-  onPressItem?: (listing: Listing) => void;
-};
+  onPressItem?: (listing: Listing) => void};
 
 export function PropertyList({
   listings,
@@ -26,6 +26,16 @@ export function PropertyList({
   const { colorScheme } = useColorScheme();
   const colors = colorScheme === 'dark' ? THEME.dark : THEME.light;
 
+  const handleItemPressed=(listing:Listing)=>{
+    router.push({
+      pathname: "/property/[id]",
+
+      params:{
+        id: listing.id     
+      }
+    })
+  }
+
   return (
     <FlashList
       data={listings}
@@ -33,7 +43,7 @@ export function PropertyList({
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => (
         <View style={{ flex: 1, padding: 6 }}>
-          <PropertyCard listing={item} onPress={onPressItem} />
+          <PropertyCard listing={item} onPress={handleItemPressed} />
         </View>
       )}
       onEndReached={onEndReached}

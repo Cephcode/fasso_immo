@@ -12,7 +12,7 @@ const PROPERTY_TYPE_LABELS: Record<Post['propertyType'], string> = {
   Land: 'Terrain',
 };
 
-function mapRowToListing(row: any): Listing {
+export function mapRowToListing(row: any): Listing {
   const features: Listing['features'] = [
     { icon: 'bed-outline', label: String(row.rooms_count ?? 0) },
     {
@@ -92,3 +92,4 @@ export function useListings() {
 
   return { listings, loading, loadingMore, refreshing, error, loadMore, refresh };
 }
+

@@ -6,6 +6,7 @@ import { Image } from 'expo-image';
 import { useColorScheme } from 'nativewind';
 import { useState } from 'react';
 import { Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
+
 function formatPrice(amount: number) {
   const withDots = Math.round(amount)
     .toString()

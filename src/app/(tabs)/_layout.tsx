@@ -1,8 +1,41 @@
+import Header from '@/components/ui/header';
 import { THEME } from '@/lib/theme';
 import { Octicons } from '@expo/vector-icons';
-import { Tabs } from "expo-router";
+import { Redirect, Stack, Tabs } from "expo-router";
 import { useColorScheme } from 'nativewind';
+import { ActivityIndicator, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+
+
+
+
+function AuthGate({ isConnected }: { isConnected: boolean | null }) {
+  const { colorScheme } = useColorScheme();
+  const colors = colorScheme === 'dark' ? THEME.dark : THEME.light;
+  const insets = useSafeAreaInsets();
+
+  if (isConnected === null) {
+    return (
+      <View className="flex-1 items-center justify-center bg-primary-foreground">
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (!isConnected) {
+    return (
+      <Redirect href='/auth/sign-up'/>
+    );
+  }
+
+  return (
+      <Stack screenOptions={{ headerShown: false, contentStyle: { flex: 1 } }}>
+         <Header />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
+  );
+}
 
 export default function Layout() {
     const { colorScheme } = useColorScheme();

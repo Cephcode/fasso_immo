@@ -21,7 +21,7 @@ export default function Header() {
         <View className="h-9 w-9 items-center justify-center rounded-full bg-primary/10">
           <MaterialCommunityIcons name="home-city-outline" size={20} color={colors.primary} />
         </View>
-        <Text className="text-2xl font-bold tracking-tight text-foreground">Fasso Immo</Text>
+        <Text className="text-2xl font-bold tracking-tight text-primary">Fasso Immo</Text>
       </View>
 
       <Search/>

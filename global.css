@@ -10,7 +10,7 @@
        casser, mais l'app verrouille le mode clair (voir src/app/_layout.tsx). */
     --background: 0 0% 100%;
     --foreground: 240 10% 8%;
-    --card: 0 0% 100%;
+    --card: 240 20% 96%;
     --card-foreground: 240 10% 8%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 8%;

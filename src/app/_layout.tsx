@@ -1,3 +1,4 @@
+import { LikedPostsProvider } from '@/hooks/useLikedPosts';
 import { isLoggedIn } from '@/lib/isUserloggedIn';
 import { NAV_THEME } from '@/lib/theme';
 import { Stack } from 'expo-router';
@@ -41,10 +42,11 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ThemeProvider value={NAV_THEME.light}>
-              
-      <Stack screenOptions={{ headerShown: false, contentStyle: { flex: 1 } }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      </Stack>
+          <LikedPostsProvider>
+            <Stack screenOptions={{ headerShown: false, contentStyle: { flex: 1 } }}>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            </Stack>
+          </LikedPostsProvider>
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

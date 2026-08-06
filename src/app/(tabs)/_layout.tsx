@@ -1,9 +1,9 @@
-import Header from '@/components/ui/header';
 import { GlassSurface } from '@/components/ui/glass-view';
+import Header from '@/components/ui/header';
+import { usePushRegistration } from '@/hooks/usePushRegistration';
 import { isLoggedIn } from '@/lib/isUserloggedIn';
 import { supabase } from '@/lib/supabase';
 import { THEME } from '@/lib/theme';
-import { usePushRegistration } from '@/hooks/usePushRegistration';
 import { Octicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from "expo-router";
 import { useEffect, useState } from 'react';
@@ -70,16 +70,30 @@ export default function TabsLayout() {
         screenOptions={{
           headerShown: false,
           tabBarShowLabel: false,
+          // BottomTabItem.js (vendor react-navigation) donne à la cellule de
+          // chaque onglet `justifyContent: 'flex-start'` (pensé pour un icône
+          // au-dessus d'un label) : sans label affiché, l'icône reste collée
+          // en haut de sa cellule de 64px au lieu de s'y recentrer. On force
+          // l'icône à occuper toute la cellule pour qu'elle se recentre
+          // elle-même (styles.icon du même fichier a déjà justifyContent/
+          // alignItems: 'center' sur 100% de son wrapper).
+          tabBarIconStyle: { height: '100%', width: '100%' },
           tabBarStyle: {
             backgroundColor: 'transparent',
             borderTopWidth: 0,
             elevation: 0,
             height: 64 + insets.bottom,
           },
+          // Le conteneur de la tab bar réserve `insets.bottom` en paddingBottom
+          // (voir BottomTabBar.js) pour la rangée d'icônes, mais ce
+          // `tabBarBackground` est positionné en absolute et ignore ce padding
+          // (il se cale sur la boîte totale, pas sur la boîte déjà réduite) :
+          // il faut donc soustraire `insets.bottom` nous-mêmes pour que le
+          // pilule de verre garde le même centre vertical que les icônes.
           tabBarBackground: () => (
             <View
               pointerEvents="none"
-              style={{ flex: 1, paddingHorizontal: 20, paddingTop: 8, paddingBottom: insets.bottom + 8 }}
+              style={{ flex: 1, paddingHorizontal: 8, paddingTop: 8, paddingBottom: insets.bottom + 8 }}
             >
               <GlassSurface
                 intensity="regular"

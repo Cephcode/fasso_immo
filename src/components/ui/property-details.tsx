@@ -1,5 +1,6 @@
 import { GlassBlurRoot, GlassSurface } from '@/components/ui/glass-view';
 import { Text } from '@/components/ui/text';
+import { useLikedPosts } from '@/hooks/useLikedPosts';
 import { formatPrice } from '@/lib/format';
 import { PROPERTY_TYPE_LABELS } from '@/lib/property-type-labels';
 import { THEME } from '@/lib/theme';
@@ -41,7 +42,8 @@ export function PropertyDetail({
   const photos_url=photos.map((item,id)=>{
     return process.env.EXPO_PUBLIC_IMAGE_BASE_URL+item
   })
-  const [isFavorite, setIsFavorite] = useState(false);
+  const { isLiked, toggleLike } = useLikedPosts();
+  const isFavorite = isLiked(post.id);
   const [activeIndex, setActiveIndex] = useState(0);
   const progress = useSharedValue(0);
   const carouselRef = useRef<CarouselRef>(null);
@@ -99,7 +101,7 @@ export function PropertyDetail({
             </GlassSurface>
             <GlassSurface intensity="regular" interactive className="h-10 w-10 rounded-full">
               <Pressable
-                onPress={() => setIsFavorite((v) => !v)}
+                onPress={() => toggleLike(post.id)}
                 hitSlop={8}
                 className="h-full w-full items-center justify-center"
               >
@@ -206,7 +208,7 @@ export function PropertyDetail({
         <GlassSurface intensity="thick" className="flex-row gap-3 rounded-[26px] p-3">
           <Pressable
             onPress={onContactPress}
-            className="flex-row items-center justify-center gap-2 rounded-full border border-border/70 bg-background/60 px-5"
+            className="flex-row items-center justify-center gap-2 rounded-full border border-border/70 bg-background/60 px-5 py-3"
           >
             <MaterialCommunityIcons name="message-outline" size={18} color={colors.foreground} />
             <Text className="font-semibold text-foreground">Message</Text>

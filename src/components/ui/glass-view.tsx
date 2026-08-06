@@ -88,6 +88,31 @@ const OVERLAY_OPACITY: Record<GlassIntensity, number> = {
   thick: 0.72,
 };
 
+// Sans image/contenu coloré à flouter derrière (fond blanc uni), le voile
+// blanc + un flou natif indisponible ne suffisent pas à faire "exister" la
+// surface : il lui faut une ombre propre (et `elevation` pour qu'elle soit
+// visible sur Android, où shadow* seul ne suffit pas toujours) pour se
+// détacher du fond, comme les vrais matériaux "glass" d'Apple.
+const DEFAULT_GLASS_SHADOW: ViewStyle = {
+  shadowColor: '#000',
+  shadowOpacity: 0.08,
+  shadowRadius: 14,
+  shadowOffset: { width: 0, height: 5 },
+  elevation: 4,
+};
+
+// `overflow-hidden` (nécessaire pour clipper le flou aux coins arrondis)
+// coupe aussi l'ombre portée si elle est posée sur la même vue — sur iOS
+// comme sur Android. On récupère donc juste les classes `rounded-*` pour
+// les appliquer à la sous-couche clippée, et l'ombre reste sur la vue du
+// dessus, non clippée.
+function extractRoundedClasses(className?: string) {
+  return (className ?? '')
+    .split(/\s+/)
+    .filter((token) => token.startsWith('rounded'))
+    .join(' ');
+}
+
 /**
  * Surface "liquid glass" cohérente sur iOS (verre natif iOS 26+, sinon flou
  * UIVisualEffectView) comme sur Android (flou natif via expo-blur). Sert de
@@ -112,7 +137,7 @@ export function GlassSurface({
         glassEffectStyle={intensity === 'thin' ? 'clear' : 'regular'}
         tintColor={tintColor}
         isInteractive={interactive}
-        className={className}
+        className={cn('items-center justify-center', className)}
         style={style}
       >
         {children}
@@ -125,20 +150,25 @@ export function GlassSurface({
   // explicitement dans ce cas pour rester silencieux et ne garder que le
   // voile translucide (dégradé propre plutôt que flou natif indisponible).
   const androidBlurMethod: BlurMethod = blurTarget ? 'dimezisBlurViewSdk31Plus' : 'none';
+  const roundedClasses = extractRoundedClasses(className);
 
   return (
-    <View className={cn('overflow-hidden', bordered && 'border border-white/60', className)} style={style}>
-      <BlurView
-        intensity={BLUR_INTENSITY[intensity]}
-        tint="light"
-        blurMethod={androidBlurMethod}
-        blurTarget={blurTarget ?? undefined}
-        style={StyleSheet.absoluteFill}
-      />
-      <View
-        pointerEvents="none"
-        style={[StyleSheet.absoluteFill, { backgroundColor: `rgba(255,255,255,${OVERLAY_OPACITY[intensity]})` }]}
-      />
+    <View
+      className={cn('items-center justify-center', bordered && 'border border-black/10', className)}
+      style={[DEFAULT_GLASS_SHADOW, style]}
+    >
+      <View pointerEvents="none" className={cn('overflow-hidden', roundedClasses)} style={StyleSheet.absoluteFill}>
+        <BlurView
+          intensity={BLUR_INTENSITY[intensity]}
+          tint="light"
+          blurMethod={androidBlurMethod}
+          blurTarget={blurTarget ?? undefined}
+          style={StyleSheet.absoluteFill}
+        />
+        <View
+          style={[StyleSheet.absoluteFill, { backgroundColor: `rgba(255,255,255,${OVERLAY_OPACITY[intensity]})` }]}
+        />
+      </View>
       {children}
     </View>
   );

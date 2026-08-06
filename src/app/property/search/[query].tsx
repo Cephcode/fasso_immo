@@ -9,7 +9,7 @@ export default function HomeScreen() {
   const { listings, loading, error } = useSearchProperty(query);
   return (
     
-    <View style={{ flex: 1,paddingHorizontal: 10 ,gap: 10 }} className='bg-primary-foreground'>
+    <View style={{ flex: 1,paddingHorizontal: 10 ,gap: 10 }} className='bg-background'>
   
 
 <PropertyList

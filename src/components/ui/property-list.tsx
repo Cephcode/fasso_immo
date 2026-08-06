@@ -4,7 +4,6 @@ import { THEME } from '@/lib/theme';
 import type { Listing } from '@/types/listing';
 import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
-import { useColorScheme } from 'nativewind';
 import { ActivityIndicator, View } from 'react-native';
 
 type PropertyListProps = {
@@ -23,8 +22,7 @@ export function PropertyList({
   onRefresh,
   onPressItem,
 }: PropertyListProps) {
-  const { colorScheme } = useColorScheme();
-  const colors = colorScheme === 'dark' ? THEME.dark : THEME.light;
+  const colors = THEME.light;
 
   const handleItemPressed=(listing:Listing)=>{
     router.push({
@@ -39,10 +37,10 @@ export function PropertyList({
   return (
     <FlashList
       data={listings}
-      numColumns={2}
+      numColumns={1}
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => (
-        <View style={{ flex: 1, padding: 6 }}>
+        <View style={{ flex: 1, paddingHorizontal: 2, paddingVertical: 8 }}>
           <PropertyCard listing={item} onPress={handleItemPressed} />
         </View>
       )}
@@ -50,7 +48,7 @@ export function PropertyList({
       onEndReachedThreshold={0.4}
       refreshing={refreshing}
       onRefresh={onRefresh}
-      contentContainerStyle={{ padding: 0 }}
+      contentContainerStyle={{ padding: 0, paddingBottom: 16 }}
       ListFooterComponent={
         loadingMore ? (
           <View className="py-4">
@@ -59,8 +57,8 @@ export function PropertyList({
         ) : null
       }
       ListEmptyComponent={
-        <View className="items-center justify-center py-20">
-          <Text className="text-muted-foreground">Aucune annonce pour le moment.</Text>
+        <View className="items-center justify-center gap-2 py-24">
+          <Text className="text-sm text-muted-foreground">Aucune annonce pour le moment.</Text>
         </View>
       }
     />

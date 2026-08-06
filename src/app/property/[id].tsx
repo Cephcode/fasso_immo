@@ -1,6 +1,7 @@
 import { PropertyDetail } from '@/components/ui/property-details';
 import { Text } from '@/components/ui/text';
 import { supabase } from '@/lib/supabase';
+import { THEME } from '@/lib/theme';
 import type { Post } from '@/types/listing';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -32,16 +33,16 @@ export default function PropertyDetailScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-primary-foreground">
-        <ActivityIndicator className='text-primary'/>
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator color={THEME.light.primary} />
       </View>
     );
   }
 
   if (!post) {
     return (
-      <View className="flex-1 items-center justify-center bg-primary-foreground">
-        <Text className="text-muted-foreground">Annonce introuvable.</Text>
+      <View className="flex-1 items-center justify-center bg-background">
+        <Text className="text-sm text-muted-foreground">Annonce introuvable.</Text>
       </View>
     );
   }

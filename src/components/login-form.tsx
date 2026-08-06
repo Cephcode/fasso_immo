@@ -2,7 +2,6 @@ import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
-    CardDescription,
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
@@ -10,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Text } from '@/components/ui/text';
 import { supabase } from '@/lib/supabase';
+import { THEME } from '@/lib/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as React from 'react';
@@ -74,21 +74,18 @@ export default function LoginForm() {
 
   return (
     <View className="gap-6">
-      <Card className="border-border/0 sm:border-border shadow-none sm:shadow-sm sm:shadow-black/5">
-        <CardHeader>
-          <CardTitle className="text-center text-xl sm:text-left text-primaryForeground">
-            Se connecter
+      <Card className="border-transparent bg-transparent p-0 shadow-none">
+        <CardHeader className="px-0">
+          <CardTitle className="text-center text-base font-medium text-muted-foreground">
+            Connectez-vous à votre compte pour continuer.
           </CardTitle>
-          <CardDescription className="text-center sm:text-left text-primaryForeground">
-            Bienvenue ! Connectez-vous à votre compte pour continuer.
-          </CardDescription>
         </CardHeader>
-        <CardContent className="gap-6">
-          <View className="gap-6">
-            
+        <CardContent className="gap-6 px-0">
+          <View className="gap-5">
+
             {/* Message d'erreur dynamique */}
             {errorMessage && (
-              <View className="rounded-lg bg-destructive/10 p-3">
+              <View className="rounded-2xl bg-destructive/10 p-3">
                 <Text className="text-center text-xs font-medium text-destructive">
                   {errorMessage}
                 </Text>
@@ -114,10 +111,8 @@ export default function LoginForm() {
 
             {/* Champ Mot de passe avec Icône de masque/démaquillage */}
             <View className="gap-1.5">
-              <View className="flex-row items-center justify-between">
-                <Label htmlFor="password">Mot de passe</Label>
-              </View>
-              
+              <Label htmlFor="password">Mot de passe</Label>
+
               <View className="relative justify-center">
                 <Input
                   ref={passwordInputRef}
@@ -127,30 +122,31 @@ export default function LoginForm() {
                   secureTextEntry={!isPasswordVisible}
                   returnKeyType="send"
                   onSubmitEditing={onSubmit}
-                  className="pr-10"
+                  className="pr-11"
                 />
                 <TouchableOpacity
                   activeOpacity={0.7}
                   onPress={() => setIsPasswordVisible(!isPasswordVisible)}
-                  className="absolute right-3 p-1"
+                  className="absolute right-4 p-1"
                 >
                   <Ionicons
                     name={isPasswordVisible ? 'eye-off' : 'eye'}
-                    size={20}
-                    color="gray"
+                    size={19}
+                    color={THEME.light.mutedForeground}
                   />
                 </TouchableOpacity>
               </View>
             </View>
 
             {/* Bouton de Soumission */}
-            <Button 
-              className="w-full bg-primary" 
+            <Button
+              className="mt-2 w-full"
+              size="lg"
               onPress={onSubmit}
               disabled={loading}
             >
               {loading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={THEME.light.primaryForeground} />
               ) : (
                 <Text className="font-semibold text-primary-foreground">Se connecter</Text>
               )}
@@ -159,10 +155,10 @@ export default function LoginForm() {
 
           {/* Redirection vers l'inscription */}
           <Text className="text-center text-sm text-muted-foreground">
-            Vous n'avez pas encore de compte ?{' '}
+            Vous n&apos;avez pas encore de compte ?{' '}
             <Text
               onPress={() => router.push('/auth/sign-up')}
-              className="text-sm font-medium text-primary underline underline-offset-4"
+              className="text-sm font-semibold text-primary"
             >
               Créez-en un
             </Text>

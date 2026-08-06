@@ -1,0 +1,1369 @@
+you know my files strucures,my client asked me to redesign the app ,knowing the different librairies that i installed for ui (nativewind,taillwind) etc he asked me to use a liquid glass style  in apple style,qui marche aussi bien sur android que sur ios,i want you to redesign the app. you have my files structure,voici aussi le types de mes donnees "import type { MaterialCommunityIcons } from '@expo/vector-icons';
+
+
+
+
+export type ListingFeatureIcon = keyof typeof MaterialCommunityIcons.glyphMap;
+
+
+
+
+export interface ListingFeature {
+
+icon: ListingFeatureIcon;
+
+label: string;
+
+}
+
+
+
+
+// Ce que PropertyCard consomme — stable, indépendant du schéma DB
+
+export interface Listing {
+
+id: string;
+
+title: string;
+
+price: number;
+
+city: string;
+
+neighborhood: string;
+
+coverPhotoUrl: string;
+
+features: ListingFeature[];
+
+}
+
+
+
+
+// Ligne brute de la table `posts` — ton modèle réel
+
+export interface Post {
+
+id: string;
+
+created_at: string;
+
+title: string;
+
+description: string;
+
+propertyType: 'House' | 'Apartment' | 'Condo' | 'Townhouse' | 'Land';
+
+rooms_count: number;
+
+price: number;
+
+country: string;
+
+status: boolean;
+
+city: string;
+
+neighborhood: string;
+
+photos_id: { '1': string; '2': string };
+
+user_id: string;
+
+}
+
+
+
+
+export interface ListingOwner {
+
+id:string
+
+name: string;
+
+}",et voici mes pages pages "import { PropertyList } from '@/components/ui/property-list';
+
+import { useListings } from '@/hooks/useListings';
+
+import { isLoggedIn } from '@/lib/isUserloggedIn';
+
+import { useEffect, useState } from 'react';
+
+import { ActivityIndicator, View } from 'react-native'; // Ajout d'un indicateur de chargement
+
+
+
+
+export default function HomeScreen() {
+
+// null = en cours de vérification, true = connecté, false = déconnecté
+
+const [isConnected, setIsConnected] = useState<boolean | null>(null);
+
+useEffect(() => {
+
+const checkAuth = async () => {
+
+const loggedIn = await isLoggedIn();
+
+setIsConnected(loggedIn);
+
+console.log("Utilisateur connecté ?", loggedIn);
+
+    };
+
+
+
+
+checkAuth();
+
+  }, []);
+
+
+
+
+const { listings, loadingMore, refreshing, loadMore, refresh } = useListings();
+
+
+
+
+// Optionnel : Afficher un écran de chargement pendant la vérification Supabase
+
+if (isConnected === null) {
+
+return (
+
+<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+
+<ActivityIndicator size="large" />
+
+</View>
+
+    );
+
+  }
+
+
+
+
+return (
+
+<View style={{ flex: 1, paddingHorizontal: 10, gap: 10 }} className='bg-primary-foreground'>
+
+<PropertyList
+
+listings={listings}
+
+loadingMore={loadingMore}
+
+refreshing={refreshing}
+
+onEndReached={loadMore}
+
+onRefresh={refresh}
+
+/>
+
+</View>
+
+  );
+
+}","import { PropertyList } from '@/components/ui/property-list';
+
+import { useSearchProperty } from '@/hooks/use-search-property';
+
+
+
+
+import { useLocalSearchParams } from 'expo-router';
+
+import { View } from 'react-native';
+
+export default function HomeScreen() {
+
+
+
+
+const {query} = useLocalSearchParams<{query : string}>();
+
+const { listings, loading, error } = useSearchProperty(query);
+
+return (
+
+<View style={{ flex: 1,paddingHorizontal: 10 ,gap: 10 }} className='bg-primary-foreground'>
+
+
+
+
+<PropertyList
+
+listings={listings}
+
+loadingMore={false}
+
+refreshing={loading}
+
+onEndReached={()=>{}}
+
+onRefresh={()=>{}}
+
+/>
+
+
+
+
+</View>
+
+  );
+
+}
+
+
+","import { PropertyDetail } from '@/components/ui/property-details';
+
+import { Text } from '@/components/ui/text';
+
+import { supabase } from '@/lib/supabase';
+
+import type { Post } from '@/types/listing';
+
+import { useLocalSearchParams, useRouter } from 'expo-router';
+
+import { useEffect, useState } from 'react';
+
+import { ActivityIndicator, View } from 'react-native';
+
+
+
+
+export default function PropertyDetailScreen() {
+
+const { id } = useLocalSearchParams<{ id: string }>();
+
+const router = useRouter();
+
+const [post, setPost] = useState<Post | null>(null);
+
+const [loading, setLoading] = useState(true);
+
+
+
+
+useEffect(() => {
+
+let isMounted = true;
+
+
+
+
+async function fetchPost() {
+
+const { data, error } = await supabase.from('posts').select('*').eq('id', id).single();
+
+
+
+
+if (isMounted) {
+
+if (!error) setPost(data);
+
+setLoading(false);
+
+      }
+
+    }
+
+
+
+
+if (id) fetchPost();
+
+return () => {
+
+isMounted = false;
+
+    };
+
+  }, [id]);
+
+
+
+
+if (loading) {
+
+return (
+
+<View className="flex-1 items-center justify-center bg-primary-foreground">
+
+<ActivityIndicator className='text-primary'/>
+
+</View>
+
+    );
+
+  }
+
+
+
+
+if (!post) {
+
+return (
+
+<View className="flex-1 items-center justify-center bg-primary-foreground">
+
+<Text className="text-muted-foreground">Annonce introuvable.</Text>
+
+</View>
+
+    );
+
+  }
+
+
+
+
+return <PropertyDetail post={post} onBack={() => router.back()} />;
+
+}"," import LoginForm from '@/components/login-form';
+
+import { THEME } from '@/lib/theme';
+
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+import { useColorScheme } from 'nativewind';
+
+
+
+
+import { KeyboardAvoidingView, ScrollView, Text, View } from 'react-native';
+
+
+
+
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+
+
+
+export default function LoginPage(){
+
+const { colorScheme } = useColorScheme();
+
+const colors = colorScheme === 'dark' ? THEME.dark : THEME.light;
+
+const insets = useSafeAreaInsets();
+
+
+
+
+return (
+
+<KeyboardAvoidingView
+
+behavior={'padding'}
+
+className="flex-1 bg-primary-foreground"
+
+>
+
+<ScrollView
+
+contentContainerStyle={{
+
+flexGrow: 1,
+
+justifyContent: 'center',
+
+paddingTop: insets.top + 24,
+
+paddingBottom: insets.bottom + 24,
+
+paddingHorizontal: 24,
+
+          }}
+
+keyboardShouldPersistTaps="handled"
+
+>
+
+<View className="flex-row items-center justify-center gap-2">
+
+<View className="h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+
+<MaterialCommunityIcons name="home-city-outline" size={20} color={colors.primary} />
+
+</View>
+
+<Text className="text-2xl font-bold tracking-tight text-foreground">Fasso Immo</Text>
+
+</View>
+
+<View className="w-full max-w-md self-center gap-6">
+
+<LoginForm/>
+
+</View>
+
+</ScrollView>
+
+</KeyboardAvoidingView>
+
+    );
+
+  }"," import { SignUpForm } from '@/components/sign-up-form';
+
+import { THEME } from '@/lib/theme';
+
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+
+
+
+import { useColorScheme } from 'nativewind';
+
+
+
+
+import { KeyboardAvoidingView, ScrollView, Text, View } from 'react-native';
+
+
+
+
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+
+
+
+export default function signUpPage(){
+
+const { colorScheme } = useColorScheme();
+
+const colors = colorScheme === 'dark' ? THEME.dark : THEME.light;
+
+const insets = useSafeAreaInsets();
+
+
+
+
+return (
+
+<KeyboardAvoidingView
+
+behavior={'padding'}
+
+className="flex-1 bg-primary-foreground"
+
+>
+
+<ScrollView
+
+contentContainerStyle={{
+
+flexGrow: 1,
+
+justifyContent: 'center',
+
+paddingTop: insets.top + 24,
+
+paddingBottom: insets.bottom + 24,
+
+paddingHorizontal: 24,
+
+          }}
+
+keyboardShouldPersistTaps="handled"
+
+>
+
+<View className="flex-row items-center justify-center gap-2">
+
+<View className="h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+
+<MaterialCommunityIcons name="home-city-outline" size={20} color={colors.primary} />
+
+</View>
+
+<Text className="text-2xl font-bold tracking-tight text-foreground">Fasso Immo</Text>
+
+</View>
+
+<View className="w-full max-w-md self-center gap-6">
+
+<SignUpForm/>
+
+</View>
+
+</ScrollView>
+
+</KeyboardAvoidingView>
+
+    );
+
+  }","import { Text, TextClassContext } from '@/components/ui/text';
+import { cn } from '@/lib/utils';
+import { View } from 'react-native';
+
+function Card({ className, ...props }: React.ComponentProps<typeof View> & React.RefAttributes<View>) {
+  return (
+    <TextClassContext.Provider value="text-card-foreground">
+      <View
+        className={cn(
+          'bg-card border-border flex flex-col gap-6 rounded-xl border py-6 shadow-sm shadow-black/5',
+          className
+        )}
+        {...props}
+      />
+    </TextClassContext.Provider>
+  );
+}
+
+function CardHeader({ className, ...props }: React.ComponentProps<typeof View> & React.RefAttributes<View>) {
+  return <View className={cn('flex flex-col gap-1.5 px-6', className)} {...props} />;
+}
+
+function CardTitle({
+  className,
+  ref,
+  ...props
+}: React.ComponentProps<typeof Text> & React.RefAttributes<typeof Text>) {
+
+  return (
+    <Text
+      ref={ref}
+      role="heading"
+      aria-level={3}
+      className={cn('font-semibold leading-none', className)}
+      {...props}
+    />
+  );
+}
+
+function CardDescription({
+  className,
+  ...props
+}: React.ComponentProps<typeof Text> & React.RefAttributes<typeof Text>) {
+  return <Text className={cn('text-muted-foreground text-sm', className)} {...props} />;
+}
+
+function CardContent({ className, ...props }: React.ComponentProps<typeof View> & React.RefAttributes<View>) {
+  return <View className={cn('px-6', className)} {...props} />;
+}
+
+function CardFooter({ className, ...props }: React.ComponentProps<typeof View> & React.RefAttributes<View>) {
+  return <View className={cn('flex flex-row items-center px-6', className)} {...props} />;
+}
+
+export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle };
+","import { TextClassContext } from '@/components/ui/text';
+import { cn } from '@/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { Platform, Pressable } from 'react-native';
+
+const buttonVariants = cva(
+  cn(
+    'group shrink-0 flex-row items-center justify-center gap-2 rounded-md shadow-none',
+    Platform.select({
+      web: "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+    })
+  ),
+  {
+    variants: {
+      variant: {
+        default: cn(
+          'bg-primary active:bg-primary/90 shadow-sm shadow-black/5',
+          Platform.select({ web: 'hover:bg-primary/90' })
+        ),
+        destructive: cn(
+          'bg-destructive active:bg-destructive/90 dark:bg-destructive/60 shadow-sm shadow-black/5',
+          Platform.select({
+            web: 'hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40',
+          })
+        ),
+        outline: cn(
+          'border-border bg-background active:bg-accent dark:bg-input/30 dark:border-input dark:active:bg-input/50 border shadow-sm shadow-black/5',
+          Platform.select({
+            web: 'hover:bg-accent dark:hover:bg-input/50',
+          })
+        ),
+        secondary: cn(
+          'bg-secondary active:bg-secondary/80 shadow-sm shadow-black/5',
+          Platform.select({ web: 'hover:bg-secondary/80' })
+        ),
+        ghost: cn(
+          'active:bg-accent dark:active:bg-accent/50',
+          Platform.select({ web: 'hover:bg-accent dark:hover:bg-accent/50' })
+        ),
+        link: '',
+      },
+      size: {
+        default: cn('h-10 px-4 py-2 sm:h-9', Platform.select({ web: 'has-[>svg]:px-3' })),
+        sm: cn('h-9 gap-1.5 rounded-md px-3 sm:h-8', Platform.select({ web: 'has-[>svg]:px-2.5' })),
+        lg: cn('h-11 rounded-md px-6 sm:h-10', Platform.select({ web: 'has-[>svg]:px-4' })),
+        icon: 'h-10 w-10 sm:h-9 sm:w-9',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+      size: 'default',
+    },
+  }
+);
+
+const buttonTextVariants = cva(
+  cn(
+    'text-foreground text-sm font-medium',
+    Platform.select({ web: 'pointer-events-none transition-colors' })
+  ),
+  {
+    variants: {
+      variant: {
+        default: 'text-primary-foreground',
+        destructive: 'text-white',
+        outline: cn(
+          'group-active:text-accent-foreground',
+          Platform.select({ web: 'group-hover:text-accent-foreground' })
+        ),
+        secondary: 'text-secondary-foreground',
+        ghost: 'group-active:text-accent-foreground',
+        link: cn(
+          'text-primary group-active:underline',
+          Platform.select({ web: 'underline-offset-4 hover:underline group-hover:underline' })
+        ),
+      },
+      size: {
+        default: '',
+        sm: '',
+        lg: '',
+        icon: '',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+      size: 'default',
+    },
+  }
+);
+
+type ButtonProps = React.ComponentProps<typeof Pressable> & React.RefAttributes<typeof Pressable> & VariantProps<typeof buttonVariants>;
+
+function Button({ className, variant, size, ...props }: ButtonProps) {
+  return (
+    <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
+      <Pressable
+        className={cn(props.disabled && 'opacity-50', buttonVariants({ variant, size }), className)}
+        role="button"
+        {...props}
+      />
+    </TextClassContext.Provider>
+  );
+}
+
+export { Button, buttonTextVariants, buttonVariants };
+export type { ButtonProps };
+","
+import Search from '@/components/ui/search';
+import { Text } from '@/components/ui/text';
+import { THEME } from '@/lib/theme';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useColorScheme } from 'nativewind';
+import { Platform, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+export default function Header() {
+  const { colorScheme } = useColorScheme();
+  const colors = colorScheme === 'dark' ? THEME.dark : THEME.light;
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View
+      className="w-full gap-3 px-4 pb-4"
+      style={[styles.shadowBox, { shadowColor: colors.foreground, paddingTop: insets.top + 8,backgroundColor:colors.primaryForegroundSecond}]}
+    >
+      <View className="flex-row items-center gap-2">
+        <View className="h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+          <MaterialCommunityIcons name="home-city-outline" size={20} color={colors.primary} />
+        </View>
+        <Text className="text-2xl font-bold tracking-tight text-primary">Fasso Immo</Text>
+      </View>
+
+      <Search/>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  shadowBox: {
+    zIndex: 10,
+    ...Platform.select({
+      ios: {
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
+  },
+});","import { THEME } from '@/lib/theme';
+import { cn } from '@/lib/utils';
+import { Octicons } from '@expo/vector-icons';
+import { useColorScheme } from 'nativewind';
+import { forwardRef } from 'react';
+import { Platform, TextInput, View } from 'react-native';
+
+type InputProps = React.ComponentProps<typeof TextInput> & {
+  leftIcon?: keyof typeof Octicons.glyphMap;
+  variant?: 'default' | 'accent';
+};
+
+const Input = forwardRef<TextInput, InputProps>(
+  ({ className, leftIcon, variant = 'default', style, ...props }, ref) => {
+    const { colorScheme } = useColorScheme();
+    const colors = colorScheme === 'dark' ? THEME.dark : THEME.light;
+
+    const isAccent = variant === 'accent';
+    const textColor = isAccent ? colors.primaryForeground : colors.foreground;
+    const iconColor = isAccent ? colors.primaryForeground : colors.mutedForeground;
+
+    return (
+      <View className="relative w-full justify-center bg-card-foreground rounded-full">
+        {leftIcon && (
+          <Octicons
+            name={leftIcon}
+            size={18}
+            color={iconColor}
+            style={{ position: 'absolute', left: 12, zIndex: 1 }}
+          />
+        )}
+        <TextInput
+          ref={ref}
+          textAlignVertical="center"
+          className={cn(
+            'dark:bg-input/30 border-input bg-background text-foreground flex h-10 w-full min-w-0 flex-row items-center rounded-full border text-base leading-5 shadow-sm shadow-black/5 sm:h-9',
+            isAccent && 'border-transparent bg-primary text-primary-foreground dark:bg-primary',
+            props.editable === false &&
+              cn(
+                'opacity-60',
+                Platform.select({ web: 'disabled:pointer-events-none disabled:cursor-not-allowed' })
+              ),
+            Platform.select({
+              web: cn(
+                'placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground outline-none transition-[color,box-shadow] md:text-sm',
+                'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive'
+              ),
+              native: 'placeholder:text-muted-foreground/50',
+            }),
+            className
+          )}
+          style={[{ paddingLeft: leftIcon ? 44 : 16, paddingRight: 16 }, { color: textColor }, style]}
+          {...props}
+        />
+      </View>
+    );
+  }
+);
+Input.displayName = 'Input';
+
+export { Input };
+","import { cn } from '@/lib/utils';
+import * as LabelPrimitive from '@rn-primitives/label';
+import { Platform } from 'react-native';
+
+function Label({
+  className,
+  onPress,
+  onLongPress,
+  onPressIn,
+  onPressOut,
+  disabled,
+  ...props
+}: React.ComponentProps<typeof LabelPrimitive.Text>) {
+  return (
+    <LabelPrimitive.Root
+      className={cn(
+        'flex select-none flex-row items-center gap-2',
+        Platform.select({
+          web: 'cursor-default leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50 group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50',
+        }),
+        disabled && 'opacity-50'
+      )}
+      onPress={onPress}
+      onLongPress={onLongPress}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
+      disabled={disabled}>
+      <LabelPrimitive.Text
+        className={cn(
+          'text-foreground text-sm font-medium',
+          Platform.select({ web: 'leading-none' }),
+          className
+        )}
+        {...props}
+      />
+    </LabelPrimitive.Root>
+  );
+}
+
+export { Label };
+","import { Text } from '@/components/ui/text';
+import { THEME } from '@/lib/theme';
+import type { Listing } from '@/types/listing';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { useColorScheme } from 'nativewind';
+import { useState } from 'react';
+import { Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
+
+function formatPrice(amount: number) {
+  const withDots = Math.round(amount)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `${withDots} FCFA`;
+}
+
+type PropertyCardProps = {
+  listing: Listing;
+  onPress?: (listing: Listing) => void;
+  style?: StyleProp<ViewStyle>;
+};
+
+export function PropertyCard({ listing, onPress, style }: PropertyCardProps) {
+  const { colorScheme } = useColorScheme();
+  const colors = colorScheme === 'dark' ? THEME.dark : THEME.light;
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  return (
+    <Pressable
+      onPress={() => onPress?.(listing)}
+      style={style}
+      className="overflow-hidden rounded-2xl border border-border bg-card"
+    >
+      <View className="relative aspect-[4/3] w-full">
+        <Image
+          source={{ uri: listing.coverPhotoUrl }}
+          contentFit="cover"
+          transition={150}
+          style={{ width: '100%', height: '100%' }}
+        />
+
+        <Pressable
+          onPress={(e) => {
+            e.stopPropagation();
+            setIsFavorite((prev) => !prev);
+          }}
+          hitSlop={8}
+          className="absolute right-2 top-2 h-8 w-8 items-center justify-center rounded-full bg-background/80"
+        >
+          <MaterialCommunityIcons
+            name={isFavorite ? 'heart' : 'heart-outline'}
+            size={16}
+            color={isFavorite ? colors.primary : colors.foreground}
+          />
+        </Pressable>
+
+        <View className="absolute bottom-2 left-2 rounded-full bg-primary px-3 py-1">
+          <Text className="text-xs font-bold text-primary-foreground">
+            {formatPrice(listing.price)}
+          </Text>
+        </View>
+      </View>
+
+      <View className="gap-1 p-3">
+        <Text
+          numberOfLines={1}
+          ellipsizeMode="tail"
+          className="text-base font-semibold text-card-foreground"
+          style={{ color: colors.cardForeground }}
+        >
+          {listing.title}
+        </Text>
+
+<View className="flex-row items-center gap-1">
+  <MaterialCommunityIcons name="map-marker-outline" size={12} color={colors.mutedForeground} />
+  <Text numberOfLines={1} ellipsizeMode="tail" className="flex-1 text-sm text-muted-foreground" style={{ color: colors.mutedForeground }}>
+    {listing.city}, {listing.neighborhood}
+  </Text>
+</View>
+
+
+      </View>
+    </Pressable>
+  );
+}","import { Text } from '@/components/ui/text';
+import { formatPrice } from '@/lib/format';
+import { PROPERTY_TYPE_LABELS } from '@/lib/property-type-labels';
+import { THEME } from '@/lib/theme';
+import type { ListingOwner, Post } from '@/types/listing';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { useColorScheme } from 'nativewind';
+import { useRef, useState } from 'react';
+import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
+import { useSharedValue } from 'react-native-reanimated';
+import { Carousel, CarouselRef, Pagination } from 'react-native-reanimated-carousel';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+type PropertyDetailProps = {
+  post: Post;
+  owner?: ListingOwner;
+  onBack?: () => void;
+  onShare?: () => void;
+  onOpenMaps?: () => void;
+  onContactPress?: () => void;
+  onInterestedPress?: () => void;
+  onViewProfile?: () => void;
+};
+
+export function PropertyDetail({
+  post,
+  owner,
+  onBack,
+  onShare,
+  onOpenMaps,
+  onContactPress,
+  onInterestedPress,
+  onViewProfile,
+}: PropertyDetailProps) {
+  const { colorScheme } = useColorScheme();
+  const colors = colorScheme === 'dark' ? THEME.dark : THEME.light;
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+
+  const photos = Object.values(post.photos_id).filter(Boolean);
+  const photos_url=photos.map((item,id)=>{
+    return process.env.EXPO_PUBLIC_IMAGE_BASE_URL+item
+  })
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const progress = useSharedValue(0);
+  const carouselRef = useRef<CarouselRef>(null);
+
+  const goTo = (index: number) => {
+    const clamped = Math.max(0, Math.min(photos.length - 1, index));
+    carouselRef.current?.scrollTo({ index: clamped, animated: true });
+  };
+
+  const chips: { icon: keyof typeof MaterialCommunityIcons.glyphMap; label: string }[] = [
+    { icon: 'bed-outline', label: `${post.rooms_count} Ch` },
+    { icon: 'home-outline', label: PROPERTY_TYPE_LABELS[post.propertyType] },
+  ];
+
+  return (
+    <View className="flex-1 bg-primary-foreground">
+      <ScrollView contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
+        {/* Galerie photo */}
+        <View className="relative">
+          <Carousel
+            ref={carouselRef}
+            progress={progress}
+            data={photos_url}
+            style={{ width, height: width * 0.9 }}
+            onSnapToItem={setActiveIndex}
+            renderItem={({ item }) => (
+              <Image source={{ uri: item }} contentFit="cover" style={{ width: '100%', height: '100%' }} />
+            )}
+          />
+
+          <View
+            className="absolute left-0 right-0 flex-row items-center justify-between px-4"
+            style={{ top: insets.top + 8 }}
+          >
+            <Pressable
+              onPress={onBack}
+              hitSlop={8}
+              className="h-10 w-10 items-center justify-center rounded-full bg-background/80"
+            >
+              <MaterialCommunityIcons name="chevron-left" size={24} color={colors.foreground} />
+            </Pressable>
+            <View className="flex-row gap-2">
+              <Pressable
+                onPress={onShare}
+                hitSlop={8}
+                className="h-10 w-10 items-center justify-center rounded-full bg-background/80"
+              >
+                <MaterialCommunityIcons name="share-variant" size={16} color={colors.foreground} />
+              </Pressable>
+              <Pressable
+                onPress={() => setIsFavorite((v) => !v)}
+                hitSlop={8}
+                className="h-10 w-10 items-center justify-center rounded-full bg-background/80"
+              >
+                <MaterialCommunityIcons
+                  name={isFavorite ? 'heart' : 'heart-outline'}
+                  size={18}
+                  color={isFavorite ? colors.primary : colors.foreground}
+                />
+              </Pressable>
+            </View>
+          </View>
+
+          {photos.length > 1 && (
+            <View className="absolute bottom-3 left-0 right-0 flex-row items-center justify-center gap-3">
+              <Pressable
+                onPress={() => goTo(activeIndex - 1)}
+                className="h-6 w-6 items-center justify-center rounded-full bg-background/70"
+              >
+                <MaterialCommunityIcons name="chevron-left" size={14} color={colors.foreground} />
+              </Pressable>
+              <Pagination
+                count={photos.length}
+                progress={progress}
+                dotStyle={{ width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.5)' }}
+                activeDotStyle={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#fff' }}
+                containerStyle={{ gap: 6 }}
+                onPress={goTo}
+              />
+              <Pressable
+                onPress={() => goTo(activeIndex + 1)}
+                className="h-6 w-6 items-center justify-center rounded-full bg-background/70"
+              >
+                <MaterialCommunityIcons name="chevron-right" size={14} color={colors.foreground} />
+              </Pressable>
+            </View>
+          )}
+        </View>
+
+        <View className="gap-6 px-4 pt-5">
+          {/* Titre + prix */}
+          <View className="flex-row items-start justify-between gap-3">
+            <Text className="flex-1 text-2xl font-bold text-foreground">{post.title}</Text>
+            <View className="items-end">
+              <Text className="text-lg font-bold text-primary">{formatPrice(post.price)}</Text>
+              <Text className="text-xs text-muted-foreground">/ mois</Text>
+            </View>
+          </View>
+
+          <View className="-mt-4 flex-row items-center gap-1">
+            <MaterialCommunityIcons name="map-marker-outline" size={14} color={colors.mutedForeground} />
+            <Text className="text-sm text-muted-foreground">
+              {post.neighborhood}, {post.city}
+            </Text>
+          </View>
+
+          {/* Caractéristiques */}
+          <View className="flex-row gap-3">
+            {chips.map((chip, index) => (
+              <View key={index} className="flex-1 items-center gap-1 rounded-2xl bg-primary/10 py-3">
+                <MaterialCommunityIcons name={chip.icon} size={20} color={colors.primary} />
+                <Text className="text-sm font-semibold text-foreground">{chip.label}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* Description */}
+          <View className="gap-2">
+            <Text className="text-base font-semibold text-foreground">Description</Text>
+            <Text className="text-sm leading-6 text-muted-foreground">{post.description}</Text>
+          </View>
+
+          {/* Localisation (placeholder pour l'instant) */}
+          <View className="gap-2">
+            <View className="flex-row items-center justify-between">
+              <Text className="text-base font-semibold text-foreground">Localisation</Text>
+              <Pressable onPress={onOpenMaps} hitSlop={8}>
+                <Text className="text-sm font-medium text-primary">Ouvrir Maps</Text>
+              </Pressable>
+            </View>
+            <View className="h-40 w-full items-center justify-center rounded-2xl bg-primary/10">
+              <MaterialCommunityIcons name="map-outline" size={24} color={colors.primary} />
+            </View>
+          </View>
+
+          {/* Propriétaire */}
+          {owner && (
+            <View className="gap-3 rounded-2xl border border-border bg-card p-4">
+
+              <Pressable onPress={onViewProfile} className="items-center rounded-full bg-primary/10 py-3">
+                <Text className="text-sm font-semibold text-primary">Consulter le profil</Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
+      </ScrollView>
+
+      {/* Barre d'action fixe */}
+      <View
+        className="flex-row gap-3 border-t border-border bg-primary-foreground px-4 pt-3"
+        style={{ paddingBottom: insets.bottom + 12 }}
+      >
+        <Pressable
+          onPress={onContactPress}
+          className="flex-row items-center justify-center gap-2 rounded-full border border-border bg-background px-5"
+        >
+          <MaterialCommunityIcons name="message-outline" size={18} color={colors.foreground} />
+          <Text className="font-medium text-foreground">Message</Text>
+        </Pressable>
+        <Pressable
+          onPress={onInterestedPress}
+          className="flex-1 items-center justify-center rounded-full bg-primary py-3"
+        >
+          <Text className="font-semibold text-primary-foreground">Je suis intéressé</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}"
+,"import { PropertyCard } from '@/components/ui/property-card';
+import { Text } from '@/components/ui/text';
+import { THEME } from '@/lib/theme';
+import type { Listing } from '@/types/listing';
+import { FlashList } from '@shopify/flash-list';
+import { router } from 'expo-router';
+import { useColorScheme } from 'nativewind';
+import { ActivityIndicator, View } from 'react-native';
+
+type PropertyListProps = {
+  listings: Listing[];
+  loadingMore: boolean;
+  refreshing: boolean;
+  onEndReached: () => void;
+  onRefresh: () => void;
+  onPressItem?: (listing: Listing) => void};
+
+export function PropertyList({
+  listings,
+  loadingMore,
+  refreshing,
+  onEndReached,
+  onRefresh,
+  onPressItem,
+}: PropertyListProps) {
+  const { colorScheme } = useColorScheme();
+  const colors = colorScheme === 'dark' ? THEME.dark : THEME.light;
+
+  const handleItemPressed=(listing:Listing)=>{
+    router.push({
+      pathname: "/property/[id]",
+
+      params:{
+        id: listing.id     
+      }
+    })
+  }
+
+  return (
+    <FlashList
+      data={listings}
+      numColumns={1}
+      keyExtractor={(item) => item.id}
+      renderItem={({ item }) => (
+        <View style={{ flex: 1, padding: 6 }}>
+          <PropertyCard listing={item} onPress={handleItemPressed} />
+        </View>
+      )}
+      onEndReached={onEndReached}
+      onEndReachedThreshold={0.4}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      contentContainerStyle={{ padding: 0 }}
+      ListFooterComponent={
+        loadingMore ? (
+          <View className="py-4">
+            <ActivityIndicator color={colors.primary} />
+          </View>
+        ) : null
+      }
+      ListEmptyComponent={
+        <View className="items-center justify-center py-20">
+          <Text className="text-muted-foreground">Aucune annonce pour le moment.</Text>
+        </View>
+      }
+    />
+  );
+}","import { cn } from '@/lib/utils';
+import { Slot } from '@rn-primitives/slot';
+import { cva, type VariantProps } from 'class-variance-authority';
+import * as React from 'react';
+import { Platform, Text as RNText, type Role } from 'react-native';
+
+const textVariants = cva(
+  cn(
+    'text-foreground text-base',
+    Platform.select({
+      web: 'select-text',
+    })
+  ),
+  {
+    variants: {
+      variant: {
+        default: '',
+        h1: cn(
+          'text-center text-4xl font-extrabold tracking-tight',
+          Platform.select({ web: 'scroll-m-20 text-balance' })
+        ),
+        h2: cn(
+          'border-border border-b pb-2 text-3xl font-semibold tracking-tight',
+          Platform.select({ web: 'scroll-m-20 first:mt-0' })
+        ),
+        h3: cn('text-2xl font-semibold tracking-tight', Platform.select({ web: 'scroll-m-20' })),
+        h4: cn('text-xl font-semibold tracking-tight', Platform.select({ web: 'scroll-m-20' })),
+        p: 'mt-3 leading-7 sm:mt-6',
+        blockquote: 'mt-4 border-l-2 pl-3 italic sm:mt-6 sm:pl-6',
+        code: cn(
+          'bg-muted relative rounded px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold'
+        ),
+        lead: 'text-muted-foreground text-xl',
+        large: 'text-lg font-semibold',
+        small: 'text-sm font-medium leading-none',
+        muted: 'text-muted-foreground text-sm',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+    },
+  }
+);
+
+type TextVariantProps = VariantProps<typeof textVariants>;
+
+type TextVariant = NonNullable<TextVariantProps['variant']>;
+
+const ROLE: Partial<Record<TextVariant, Role>> = {
+  h1: 'heading',
+  h2: 'heading',
+  h3: 'heading',
+  h4: 'heading',
+  blockquote: Platform.select({ web: 'blockquote' as Role }),
+  code: Platform.select({ web: 'code' as Role }),
+};
+
+const ARIA_LEVEL: Partial<Record<TextVariant, string>> = {
+  h1: '1',
+  h2: '2',
+  h3: '3',
+  h4: '4',
+};
+
+const TextClassContext = React.createContext<string | undefined>(undefined);
+
+function Text({
+  className,
+  asChild = false,
+  variant = 'default',
+  ...props
+}: React.ComponentProps<typeof RNText> &
+  React.RefAttributes<typeof RNText> &
+  TextVariantProps & {
+    asChild?: boolean;
+  }) {
+  const textClass = React.useContext(TextClassContext);
+  const Component = asChild ? Slot : RNText;
+  return (
+    <Component
+      className={cn(textVariants({ variant }), textClass, className)}
+      role={variant ? ROLE[variant] : undefined}
+      aria-level={variant ? ARIA_LEVEL[variant] : undefined}
+      {...props}
+    />
+  );
+}
+
+export { Text, TextClassContext };
+","import { DarkTheme, DefaultTheme, type Theme } from 'expo-router/react-navigation';
+
+export const THEME = {
+  light: {
+    background: 'hsl(0 0% 100%)',
+    foreground: 'hsl(20 13.8% 4.1%)',
+    card: 'hsl(0 0% 100%)',
+    cardForeground: 'hsl(20 13.8% 4.1%)',
+    popover: 'hsl(0 0% 100%)',
+    popoverForeground: 'hsl(20 13.8% 4.1%)',
+    primary: 'hsl(24.7 100% 36.6%)',
+    primaryForeground: 'hsl(13 100% 98%)',
+    primaryForegroundSecond: 'hsl(48.4 100% 96%)',
+    placeholder: 'hsl(18.3, 25%, 28.2%)',
+    secondary: 'hsl(240 3.5% 95.8%)',
+    secondaryForeground: 'hsl(240 6% 10%)',
+    muted: 'hsl(60 3.6% 95.9%)',
+    mutedForeground: 'hsl(18.3, 25%, 28.2%)',
+    mutedForegroundSecond: 'hsl(25 5.9% 44.6%)',
+    accent: 'hsl(60 3.6% 95.9%)',
+    accentForeground: 'hsl(24 9.6% 10%)',
+    destructive: 'hsl(357.2 100% 45.3%)',
+    destructiveForeground: 'hsl(0 0% 98%)',
+    border: 'hsl(20 6.9% 90%)',
+    input: 'hsl(20 6.9% 90%)',
+    ring: 'hsl(24 5.8% 63.1%)',
+    radius: '0.875rem',
+    chart1: 'hsl(24 6.7% 83%)',
+    chart2: 'hsl(25 5.9% 44.6%)',
+    chart3: 'hsl(33.3 6.3% 32.2%)',
+    chart4: 'hsl(30 7.2% 25%)',
+    chart5: 'hsl(12 7.2% 15.1%)',
+    sidebar: 'hsl(60 7.1% 97.9%)',
+    sidebarForeground: 'hsl(20 13.8% 4.1%)',
+    sidebarPrimary: 'hsl(30.1 100% 44.2%)',
+    sidebarPrimaryForeground: 'hsl(48.4 100% 96%)',
+    sidebarAccent: 'hsl(60 3.6% 95.9%)',
+    sidebarAccentForeground: 'hsl(24 9.6% 10%)',
+    sidebarBorder: 'hsl(20 6.9% 90%)',
+    sidebarRing: 'hsl(24 5.8% 63.1%)',
+  },
+  dark: {
+    background: 'hsl(20 13.8% 4.1%)',
+    foreground: 'hsl(60 7.1% 97.9%)',
+    card: 'hsl(24 9.6% 10%)',
+    cardForeground: 'hsl(60 7.1% 97.9%)',
+    popover: 'hsl(24 9.6% 10%)',
+    popoverForeground: 'hsl(60 7.1% 97.9%)',
+    primary: 'hsl(23.8 100% 29.5%)',
+    primaryForeground: 'hsl(13 100% 98%)',
+    primaryForegroundSecond: 'hsl(48.4 100% 96%)',
+    secondary: 'hsl(240 4% 15.9%)',
+    secondaryForeground: 'hsl(180 0% 98%)',
+    muted: 'hsl(12 7.2% 15.1%)',
+    mutedForeground: 'hsl(18.3, 25%, 28.2%)',
+    mutedForegroundSecond: 'hsl(24 5.8% 63.1%)',
+    accent: 'hsl(12 7.2% 15.1%)',
+    accentForeground: 'hsl(60 7.1% 97.9%)',
+    destructive: 'hsl(358.7 100% 69.6%)',
+    destructiveForeground: 'hsl(0 0% 98%)',
+    border: 'hsl(0 0% 100% / 0.1)',
+    input: 'hsl(0 0% 100% / 0.15)',
+    ring: 'hsl(25 5.9% 44.6%)',
+    chart1: 'hsl(24 6.7% 83%)',
+    chart2: 'hsl(25 5.9% 44.6%)',
+    chart3: 'hsl(33.3 6.3% 32.2%)',
+    chart4: 'hsl(30 7.2% 25%)',
+    chart5: 'hsl(12 7.2% 15.1%)',
+    sidebar: 'hsl(24 9.6% 10%)',
+    sidebarForeground: 'hsl(60 7.1% 97.9%)',
+    sidebarPrimary: 'hsl(36.3 100% 49.7%)',
+    sidebarPrimaryForeground: 'hsl(20.9 96.7% 13.9%)',
+    sidebarAccent: 'hsl(12 7.2% 15.1%)',
+    sidebarAccentForeground: 'hsl(60 7.1% 97.9%)',
+    sidebarBorder: 'hsl(0 0% 100% / 0.1)',
+    sidebarRing: 'hsl(25 5.9% 44.6%)',
+  },
+};
+
+export const NAV_THEME: Record<'light' | 'dark', Theme> = {
+  light: {
+    ...DefaultTheme,
+    colors: {
+      background: THEME.light.background,
+      border: THEME.light.border,
+      card: THEME.light.card,
+      notification: THEME.light.destructive,
+      primary: THEME.light.primary,
+      text: THEME.light.foreground,
+    },
+  },
+  dark: {
+    ...DarkTheme,
+    colors: {
+      background: THEME.dark.background,
+      border: THEME.dark.border,
+      card: THEME.dark.card,
+      notification: THEME.dark.destructive,
+      primary: THEME.dark.primary,
+      text: THEME.dark.foreground,
+    },
+  },
+};"

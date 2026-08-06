@@ -1,16 +1,17 @@
 import Header from '@/components/ui/header';
+import { GlassSurface } from '@/components/ui/glass-view';
 import { isLoggedIn } from '@/lib/isUserloggedIn';
 import { supabase } from '@/lib/supabase';
 import { THEME } from '@/lib/theme';
 import { Octicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from "expo-router";
-import { useColorScheme } from 'nativewind';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabsLayout() {
-  const { colorScheme } = useColorScheme();
-  const colors = colorScheme === 'dark' ? THEME.dark : THEME.light;
+  const colors = THEME.light;
+  const insets = useSafeAreaInsets();
 
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
 
@@ -40,8 +41,8 @@ export default function TabsLayout() {
   // Écran de chargement pendant la vérification
   if (isConnected === null) {
     return (
-      <View className="flex-1 items-center justify-center bg-primary-foreground">
-        <ActivityIndicator size="large" />
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -51,28 +52,48 @@ export default function TabsLayout() {
     return <Redirect href="/auth/sign-up" />;
   }
 
+  const tabIconColor = (focused: boolean) => (focused ? colors.primary : colors.mutedForegroundSecond);
+
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1 }} className="bg-background">
       {/* Header affiché proprement au-dessus des onglets */}
       <Header />
 
       <Tabs
         screenOptions={{
           headerShown: false,
+          tabBarShowLabel: false,
           tabBarStyle: {
-            backgroundColor: colors.primaryForegroundSecond,
-            borderTopColor: colors.primaryForeground,
-            elevation: 0.5,
+            backgroundColor: 'transparent',
+            borderTopWidth: 0,
+            elevation: 0,
+            height: 64 + insets.bottom,
           },
+          tabBarBackground: () => (
+            <View
+              pointerEvents="none"
+              style={{ flex: 1, paddingHorizontal: 20, paddingTop: 8, paddingBottom: insets.bottom + 8 }}
+            >
+              <GlassSurface
+                intensity="regular"
+                className="flex-1 rounded-full"
+                style={{
+                  shadowColor: '#000',
+                  shadowOpacity: 0.08,
+                  shadowRadius: 18,
+                  shadowOffset: { width: 0, height: 6 },
+                }}
+              />
+            </View>
+          ),
         }}
       >
         <Tabs.Screen
           name="(home)/index"
           options={{
             title: "Découvrir",
-            tabBarShowLabel: false,
             tabBarIcon: ({ focused }) => (
-              <Octicons name={focused ? "home-fill" : "home"} size={24} color={colors.primary} />
+              <Octicons name={focused ? "home-fill" : "home"} size={22} color={tabIconColor(focused)} />
             ),
           }}
         />
@@ -80,9 +101,9 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="liked"
           options={{
-            tabBarShowLabel: false,
+            title: "Favoris",
             tabBarIcon: ({ focused }) => (
-              <Octicons name={focused ? "heart-fill" : "heart"} size={24} color={colors.primary} />
+              <Octicons name={focused ? "heart-fill" : "heart"} size={22} color={tabIconColor(focused)} />
             ),
           }}
         />
@@ -90,9 +111,9 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="publish"
           options={{
-            tabBarShowLabel: false,
+            title: "Publier",
             tabBarIcon: ({ focused }) => (
-              <Octicons name={focused ? "feed-plus" : "plus-circle"} size={24} color={colors.primary} />
+              <Octicons name={focused ? "feed-plus" : "plus-circle"} size={22} color={tabIconColor(focused)} />
             ),
           }}
         />
@@ -101,9 +122,8 @@ export default function TabsLayout() {
           name="discussions"
           options={{
             title: "Discussions",
-            tabBarShowLabel: false,
             tabBarIcon: ({ focused }) => (
-              <Octicons name="comment" size={24} color={colors.primary} />
+              <Octicons name={focused ? "comment-discussion" : "comment"} size={22} color={tabIconColor(focused)} />
             ),
           }}
         />
@@ -112,9 +132,8 @@ export default function TabsLayout() {
           name="profile"
           options={{
             title: "Profil",
-            tabBarShowLabel: false,
             tabBarIcon: ({ focused }) => (
-              <Octicons name={focused ? "person-fill" : "person"} size={24} color={colors.primary} />
+              <Octicons name={focused ? "person-fill" : "person"} size={22} color={tabIconColor(focused)} />
             ),
           }}
         />

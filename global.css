@@ -4,39 +4,43 @@
 
 @layer base {
   :root {
+    /* Fond toujours blanc pur, façon Apple : les couleurs ne servent qu'à
+       l'accent (primary). Le reste de la palette est un dégradé de gris neutres,
+       proche des "system grays" iOS. Le thème sombre reste défini pour ne rien
+       casser, mais l'app verrouille le mode clair (voir src/app/_layout.tsx). */
     --background: 0 0% 100%;
-    --foreground: 20 13.8% 4.1%;
+    --foreground: 240 10% 8%;
     --card: 0 0% 100%;
-    --card-foreground: 20 13.8% 4.1%;
+    --card-foreground: 240 10% 8%;
     --popover: 0 0% 100%;
-    --popover-foreground: 20 13.8% 4.1%;
+    --popover-foreground: 240 10% 8%;
     --primary: 24.7 100% 36.6%;
-    --primary-foreground: 48.4 100% 96%;
-    --secondary: 240 3.5% 95.8%;
-    --secondary-foreground: 240 6% 10%;
-    --muted: 60 3.6% 95.9%;
-    --muted-foreground: 25 5.9% 44.6%;
-    --accent: 60 3.6% 95.9%;
-    --accent-foreground: 24 9.6% 10%;
-    --destructive: 357.2 100% 45.3%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 20 6.9% 90%;
-    --input: 20 6.9% 90%;
-    --ring: 24 5.8% 63.1%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 20% 96%;
+    --secondary-foreground: 240 10% 8%;
+    --muted: 240 20% 96.5%;
+    --muted-foreground: 240 5% 45%;
+    --accent: 24.7 100% 36.6%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 4 86% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 12% 91%;
+    --input: 240 12% 91%;
+    --ring: 24.7 100% 36.6%;
     --chart-1: 24 6.7% 83%;
     --chart-2: 25 5.9% 44.6%;
     --chart-3: 33.3 6.3% 32.2%;
     --chart-4: 30 7.2% 25%;
     --chart-5: 12 7.2% 15.1%;
-    --radius: 0.875rem;
-    --sidebar: 60 7.1% 97.9%;
-    --sidebar-foreground: 20 13.8% 4.1%;
-    --sidebar-primary: 30.1 100% 44.2%;
-    --sidebar-primary-foreground: 48.4 100% 96%;
-    --sidebar-accent: 60 3.6% 95.9%;
-    --sidebar-accent-foreground: 24 9.6% 10%;
-    --sidebar-border: 20 6.9% 90%;
-    --sidebar-ring: 24 5.8% 63.1%;
+    --radius: 1.25rem;
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 240 10% 8%;
+    --sidebar-primary: 24.7 100% 36.6%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 20% 96%;
+    --sidebar-accent-foreground: 240 10% 8%;
+    --sidebar-border: 240 12% 91%;
+    --sidebar-ring: 24.7 100% 36.6%;
   }
 
   .dark:root {

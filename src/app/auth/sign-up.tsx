@@ -1,22 +1,19 @@
- import { SignUpForm } from '@/components/sign-up-form';
+import { SignUpForm } from '@/components/sign-up-form';
 import { THEME } from '@/lib/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-
-import { useColorScheme } from 'nativewind';
 
 import { KeyboardAvoidingView, ScrollView, Text, View } from 'react-native';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export default function signUpPage(){
-  const { colorScheme } = useColorScheme();
-  const colors = colorScheme === 'dark' ? THEME.dark : THEME.light;
+export default function SignUpPage(){
+  const colors = THEME.light;
   const insets = useSafeAreaInsets();
 
     return (
 <KeyboardAvoidingView
         behavior={'padding'}
-        className="flex-1 bg-primary-foreground"
+        className="flex-1 bg-background"
       >
         <ScrollView
           contentContainerStyle={{
@@ -28,13 +25,13 @@ export default function signUpPage(){
           }}
           keyboardShouldPersistTaps="handled"
         >
-        <View className="flex-row items-center justify-center gap-2">
-        <View className="h-9 w-9 items-center justify-center rounded-full bg-primary/10">
-          <MaterialCommunityIcons name="home-city-outline" size={20} color={colors.primary} />
-        </View>
-        <Text className="text-2xl font-bold tracking-tight text-foreground">Fasso Immo</Text>
-      </View>
-          <View className="w-full max-w-md self-center gap-6">
+          <View className="items-center gap-3">
+            <View className="h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+              <MaterialCommunityIcons name="home-city-outline" size={26} color={colors.primary} />
+            </View>
+            <Text className="text-[28px] font-bold tracking-tight text-foreground">Créer un compte</Text>
+          </View>
+          <View className="mt-8 w-full max-w-md self-center gap-6">
             <SignUpForm/>
           </View>
         </ScrollView>

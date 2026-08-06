@@ -1,26 +1,33 @@
+import { GlassBlurRoot } from '@/components/ui/glass-view';
 import { PropertyList } from '@/components/ui/property-list';
+import { SearchResultsHeader } from '@/components/ui/search-results-header';
 import { useSearchProperty } from '@/hooks/use-search-property';
 
-import { useLocalSearchParams } from 'expo-router';
-import { View } from 'react-native';
-export default function HomeScreen() {
+import { router, useLocalSearchParams } from 'expo-router';
 
-  const {query} = useLocalSearchParams<{query : string}>();
-  const { listings, loading, error } = useSearchProperty(query);
+export default function SearchResultsScreen() {
+  const { query } = useLocalSearchParams<{ query: string }>();
+  const { listings, loading } = useSearchProperty(query);
+
   return (
-    
-    <View style={{ flex: 1,paddingHorizontal: 10 ,gap: 10 }} className='bg-background'>
-  
+    <GlassBlurRoot className="flex-1 bg-background">
+      <SearchResultsHeader
+        query={query}
+        resultCount={listings.length}
+        loading={loading}
+        onBack={() => router.back()}
+        onSubmitQuery={(newQuery) =>
+          router.setParams({ query: newQuery })
+        }
+      />
 
-<PropertyList
-  listings={listings}
-  loadingMore={false}
-  refreshing={loading}
-  onEndReached={()=>{}}
-  onRefresh={()=>{}}
-/>
-
-    </View>
+      <PropertyList
+        listings={listings}
+        loadingMore={false}
+        refreshing={loading}
+        onEndReached={() => {}}
+        onRefresh={() => {}}
+      />
+    </GlassBlurRoot>
   );
 }
-

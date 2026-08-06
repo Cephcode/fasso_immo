@@ -1,5 +1,5 @@
 import Header from '@/components/ui/header';
-import { GlassSurface } from '@/components/ui/glass-view';
+import { GlassBlurRoot, GlassSurface } from '@/components/ui/glass-view';
 import { isLoggedIn } from '@/lib/isUserloggedIn';
 import { supabase } from '@/lib/supabase';
 import { THEME } from '@/lib/theme';
@@ -55,7 +55,7 @@ export default function TabsLayout() {
   const tabIconColor = (focused: boolean) => (focused ? colors.primary : colors.mutedForegroundSecond);
 
   return (
-    <View style={{ flex: 1 }} className="bg-background">
+    <GlassBlurRoot style={{ flex: 1 }} className="bg-background">
       {/* Header affiché proprement au-dessus des onglets */}
       <Header />
 
@@ -138,6 +138,6 @@ export default function TabsLayout() {
           }}
         />
       </Tabs>
-    </View>
+    </GlassBlurRoot>
   );
 }

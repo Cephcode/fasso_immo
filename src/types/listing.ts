@@ -31,7 +31,9 @@ export interface Post {
   status: boolean;
   city: string;
   neighborhood: string;
-  photos_id: { '1': string; '2': string };
+  // Clés numériques en chaîne ('1', '2', '3'...), une par photo. Le nombre de
+  // photos n'est pas limité à deux : c'est juste ce qu'on stocke pour l'instant.
+  photos_id: Record<string, string>;
   user_id: string;
 }
 

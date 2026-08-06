@@ -1,4 +1,4 @@
-import { GlassSurface } from '@/components/ui/glass-view';
+import { GlassBlurRoot, GlassSurface } from '@/components/ui/glass-view';
 import { Text } from '@/components/ui/text';
 import { THEME } from '@/lib/theme';
 import type { Listing } from '@/types/listing';
@@ -30,7 +30,7 @@ export function PropertyCard({ listing, onPress, style }: PropertyCardProps) {
       style={style}
       className="overflow-hidden rounded-[22px] bg-card shadow-sm shadow-black/10"
     >
-      <View className="relative aspect-[4/3] w-full">
+      <GlassBlurRoot className="relative aspect-[4/3] w-full">
         <Image
           source={{ uri: listing.coverPhotoUrl }}
           contentFit="cover"
@@ -60,7 +60,7 @@ export function PropertyCard({ listing, onPress, style }: PropertyCardProps) {
             {formatPrice(listing.price)}
           </Text>
         </GlassSurface>
-      </View>
+      </GlassBlurRoot>
 
       <View className="gap-1 p-3">
         <Text

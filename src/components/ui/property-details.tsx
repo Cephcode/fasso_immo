@@ -1,4 +1,4 @@
-import { GlassSurface } from '@/components/ui/glass-view';
+import { GlassBlurRoot, GlassSurface } from '@/components/ui/glass-view';
 import { Text } from '@/components/ui/text';
 import { formatPrice } from '@/lib/format';
 import { PROPERTY_TYPE_LABELS } from '@/lib/property-type-labels';
@@ -57,13 +57,13 @@ export function PropertyDetail({
   ];
 
   return (
-    <View className="flex-1 bg-background">
+    <GlassBlurRoot className="flex-1 bg-background">
       <ScrollView
         contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Galerie photo */}
-        <View className="relative">
+        <GlassBlurRoot className="relative">
           <Carousel
             ref={carouselRef}
             progress={progress}
@@ -133,7 +133,7 @@ export function PropertyDetail({
               </GlassSurface>
             </View>
           )}
-        </View>
+        </GlassBlurRoot>
 
         <View className="gap-6 px-4 pt-5">
           {/* Titre + prix */}
@@ -210,6 +210,6 @@ export function PropertyDetail({
           </Pressable>
         </GlassSurface>
       </View>
-    </View>
+    </GlassBlurRoot>
   );
 }

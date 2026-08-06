@@ -30,14 +30,17 @@ export function PropertyCard({ listing, onPress, style }: PropertyCardProps) {
       style={style}
       className="overflow-hidden rounded-[22px] bg-card shadow-sm shadow-black/10"
     >
-      <GlassBlurRoot className="relative aspect-[4/3] w-full">
-        <Image
-          source={{ uri: listing.coverPhotoUrl }}
-          contentFit="cover"
-          transition={150}
-          style={{ width: '100%', height: '100%' }}
-        />
-
+      <GlassBlurRoot
+        className="relative aspect-[4/3] w-full"
+        background={
+          <Image
+            source={{ uri: listing.coverPhotoUrl }}
+            contentFit="cover"
+            transition={150}
+            style={{ width: '100%', height: '100%' }}
+          />
+        }
+      >
         <GlassSurface intensity="thin" interactive className="absolute right-2 top-2 h-9 w-9 rounded-full">
           <Pressable
             onPress={(e) => {

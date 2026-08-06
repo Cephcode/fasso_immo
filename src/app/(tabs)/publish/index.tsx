@@ -94,9 +94,11 @@ export default function PublishScreen() {
     }
   };
 
-  return (
-    <GlassBlurRoot className="flex-1 bg-background">
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
+  // Formulaire défilant complet : c'est le fond flouté par la barre de
+  // publication fixée en bas (voir la note sœur/descendante dans
+  // glass-view.tsx).
+  const formContent = (
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
         <ScrollView
           contentContainerStyle={{
             paddingTop: 16,
@@ -209,9 +211,12 @@ export default function PublishScreen() {
             <FieldLabel>Pays</FieldLabel>
             <Input value={country} onChangeText={setCountry} placeholder="Burkina Faso" />
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
 
+  return (
+    <GlassBlurRoot className="flex-1 bg-background" background={formContent}>
       <View className="absolute bottom-0 left-0 right-0 px-4" style={{ paddingBottom: insets.bottom + 12 }}>
         <GlassSurface intensity="thick" className="flex-row items-center gap-3 rounded-[26px] p-3">
           <Text className="flex-1 px-1 text-xs text-muted-foreground">

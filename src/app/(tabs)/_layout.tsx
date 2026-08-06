@@ -1,8 +1,9 @@
 import Header from '@/components/ui/header';
-import { GlassBlurRoot, GlassSurface } from '@/components/ui/glass-view';
+import { GlassSurface } from '@/components/ui/glass-view';
 import { isLoggedIn } from '@/lib/isUserloggedIn';
 import { supabase } from '@/lib/supabase';
 import { THEME } from '@/lib/theme';
+import { usePushRegistration } from '@/hooks/usePushRegistration';
 import { Octicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from "expo-router";
 import { useEffect, useState } from 'react';
@@ -14,6 +15,7 @@ export default function TabsLayout() {
   const insets = useSafeAreaInsets();
 
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
+  usePushRegistration(isConnected === true);
 
   useEffect(() => {
     let isMounted = true;
@@ -55,7 +57,12 @@ export default function TabsLayout() {
   const tabIconColor = (focused: boolean) => (focused ? colors.primary : colors.mutedForegroundSecond);
 
   return (
-    <GlassBlurRoot style={{ flex: 1 }} className="bg-background">
+    // Pas de GlassBlurRoot ici : la barre d'onglets est injectée par
+    // react-navigation via `tabBarBackground`, donc sa GlassSurface finit
+    // toujours nichée dans tout ce qui enveloppe <Tabs> — Android interdit
+    // ce cas (voir glass-view.tsx). Elle garde donc le voile translucide
+    // (sans flou natif) sur Android ; iOS a son vrai verre natif.
+    <View style={{ flex: 1 }} className="bg-background">
       {/* Header affiché proprement au-dessus des onglets */}
       <Header />
 
@@ -138,6 +145,6 @@ export default function TabsLayout() {
           }}
         />
       </Tabs>
-    </GlassBlurRoot>
+    </View>
   );
 }

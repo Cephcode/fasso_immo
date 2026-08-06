@@ -15,36 +15,48 @@ const BlurTarget = cssInterop(BlurTargetView, { className: 'style' });
 // il doit recevoir la référence de la vue à flouter (`blurTarget`). On la
 // fournit via ce contexte, posé par `GlassBlurRoot` autour du contenu que les
 // `GlassSurface` flottantes doivent flouter (photo, écran, etc.).
+//
+// Règle Android non négociable (doc expo-blur) : la `BlurView` doit être
+// SŒUR de la `BlurTargetView` qu'elle cible, jamais nichée dedans — sinon
+// elle essaie de se flouter elle-même et n'affiche plus rien. C'est pour ça
+// que `GlassBlurRoot` sépare explicitement `background` (dans la cible) de
+// `children` (à côté, jamais dedans).
 const BlurTargetContext = createContext<RefObject<View | null> | null>(null);
 
 type GlassBlurRootProps = {
+  /** Contenu à flouter (photo, carrousel, écran défilant...). */
+  background: ReactNode;
+  /** `GlassSurface` flottantes par-dessus le fond — jamais l'inverse. */
   children?: ReactNode;
   className?: string;
+  /** Le conteneur doit avoir une taille déterminée (flex-1, aspect-ratio, ou width/height). */
   style?: StyleProp<ViewStyle>;
 };
 
 /**
- * Enveloppe le contenu qui doit apparaître flouté derrière les `GlassSurface`
- * (photo de carte, galerie, écran entier derrière une barre flottante...).
- * Sans Android, ne fait rien de plus qu'une `View` classique.
+ * Découpe une zone en deux couches : un fond flouté par les `GlassSurface`
+ * passées en `children`, à côté (jamais dedans) sur Android. Sans Android,
+ * empile simplement les deux dans une `View` classique.
  */
-export function GlassBlurRoot({ children, className, style }: GlassBlurRootProps) {
+export function GlassBlurRoot({ background, children, className, style }: GlassBlurRootProps) {
   const targetRef = useRef<View>(null);
 
   if (Platform.OS !== 'android') {
     return (
       <View className={className} style={style}>
+        {background}
         {children}
       </View>
     );
   }
 
   return (
-    <BlurTargetContext.Provider value={targetRef}>
-      <BlurTarget ref={targetRef} className={className} style={style}>
-        {children}
+    <View className={className} style={style}>
+      <BlurTarget ref={targetRef} style={StyleSheet.absoluteFill}>
+        {background}
       </BlurTarget>
-    </BlurTargetContext.Provider>
+      <BlurTargetContext.Provider value={targetRef}>{children}</BlurTargetContext.Provider>
+    </View>
   );
 }
 

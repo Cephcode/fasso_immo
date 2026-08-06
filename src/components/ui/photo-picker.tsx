@@ -63,8 +63,8 @@ export function PhotoPicker({ photos, onChange, maxPhotos = 10 }: PhotoPickerPro
             key={uri}
             className="relative mb-[3%] overflow-hidden rounded-2xl bg-secondary"
             style={{ width: TILE_WIDTH, aspectRatio: 1 }}
+            background={<Image source={{ uri }} contentFit="cover" style={{ width: '100%', height: '100%' }} />}
           >
-            <Image source={{ uri }} contentFit="cover" style={{ width: '100%', height: '100%' }} />
             <GlassSurface intensity="thin" interactive className="absolute right-1 top-1 h-7 w-7 rounded-full">
               <Pressable
                 onPress={() => removePhoto(uri)}

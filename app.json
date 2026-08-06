@@ -44,6 +44,12 @@
         {
           "photosPermission": "Fasso Immo a besoin d'accéder à vos photos pour illustrer votre annonce."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#208AEF"
+        }
       ]
     ],
     "experiments": {

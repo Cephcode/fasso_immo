@@ -16,7 +16,7 @@ export function searchPropertyByName(query: string) {
 
     const { data, error: fetchError } = await supabase
       .from('posts')
-      .select('id, title, price, city, neighborhood, photos_id, rooms_count, property_type').eq('id',1);
+      .select('id, title, price, city, neighborhood, photos_urls, rooms_count, property_type').eq('id',1);
 
     console.log({"data":data});
   return  data;

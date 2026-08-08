@@ -37,10 +37,10 @@ export function PropertyList({
   return (
     <FlashList
       data={listings}
-      numColumns={1}
+      numColumns={2}
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => (
-        <View style={{ flex: 1, paddingHorizontal: 2, paddingVertical: 8 }}>
+        <View style={{ flex: 1, paddingHorizontal: 6, paddingVertical: 8 }}>
           <PropertyCard listing={item} onPress={handleItemPressed} />
         </View>
       )}

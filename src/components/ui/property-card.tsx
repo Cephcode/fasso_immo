@@ -90,6 +90,21 @@ export function PropertyCard({ listing, onPress, style }: PropertyCardProps) {
               {listing.city}, {listing.neighborhood}
             </Text>
           </View>
+
+          {/* Hauteur fixe : la grille FlashList (numColumns=2, pas de masonry)
+              exige des cartes de même hauteur, sinon les colonnes "sautent"
+              pendant le scroll. Le nombre de tags ne doit donc jamais faire
+              varier la hauteur de la carte. */}
+          <View className="h-4 flex-row items-center gap-2 overflow-hidden">
+            {listing.features.map((feature, index) => (
+              <View key={index} className="flex-row items-center gap-0.5">
+                <MaterialCommunityIcons name={feature.icon} size={12} color={colors.mutedForeground} />
+                <Text numberOfLines={1} className="text-xs text-muted-foreground">
+                  {feature.label}
+                </Text>
+              </View>
+            ))}
+          </View>
         </View>
       </Pressable>
     </View>

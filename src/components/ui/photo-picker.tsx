@@ -1,4 +1,4 @@
-import { GlassBlurRoot, GlassSurface } from '@/components/ui/glass-view';
+import { GlassSurface } from '@/components/ui/glass-view';
 import { Text } from '@/components/ui/text';
 import { THEME } from '@/lib/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -59,12 +59,12 @@ export function PhotoPicker({ photos, onChange, maxPhotos = 10 }: PhotoPickerPro
 
       <View className="flex-row flex-wrap gap-[3%]">
         {photos.map((uri) => (
-          <GlassBlurRoot
+          <View
             key={uri}
             className="relative mb-[3%] overflow-hidden rounded-2xl bg-secondary"
             style={{ width: TILE_WIDTH, aspectRatio: 1 }}
-            background={<Image source={{ uri }} contentFit="cover" style={{ width: '100%', height: '100%' }} />}
           >
+            <Image source={{ uri }} contentFit="cover" style={{ width: '100%', height: '100%' }} />
             <GlassSurface intensity="thin" interactive className="absolute right-1 top-1 h-7 w-7 rounded-full">
               <Pressable
                 onPress={() => removePhoto(uri)}
@@ -74,7 +74,7 @@ export function PhotoPicker({ photos, onChange, maxPhotos = 10 }: PhotoPickerPro
                 <MaterialCommunityIcons name="close" size={14} color={colors.foreground} />
               </Pressable>
             </GlassSurface>
-          </GlassBlurRoot>
+          </View>
         ))}
 
         {canAddMore && (

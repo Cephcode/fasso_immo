@@ -11,13 +11,16 @@ import { Text } from '@/components/ui/text';
 import { supabase } from '@/lib/supabase';
 import { THEME } from '@/lib/theme';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import * as React from 'react';
 import { useState } from 'react';
 import { ActivityIndicator, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function LoginForm() {
   const router = useRouter();
+  // Permet de revenir sur l'écran d'origine après connexion (ex. l'onglet
+  // Publier, qui redirige ici en passant `?redirect=/(tabs)/publish`).
+  const { redirect } = useLocalSearchParams<{ redirect?: string }>();
   const passwordInputRef = React.useRef<TextInput>(null);
 
   // Form states
@@ -61,9 +64,9 @@ export default function LoginForm() {
         return;
       }
 
-      // Succès -> Redirection vers l'application
+      // Succès -> Redirection vers l'écran d'origine (ou l'accueil par défaut)
       if (data.session) {
-        router.replace('/(tabs)/(home)');
+        router.replace((redirect as Href) ?? '/(tabs)/(home)');
       }
     } catch (err: any) {
       setErrorMessage(err.message || 'Une erreur inattendue est survenue.');
@@ -157,7 +160,7 @@ export default function LoginForm() {
           <Text className="text-center text-sm text-muted-foreground">
             Vous n&apos;avez pas encore de compte ?{' '}
             <Text
-              onPress={() => router.push('/auth/sign-up')}
+              onPress={() => router.push({ pathname: '/auth/sign-up', params: redirect ? { redirect } : undefined })}
               className="text-sm font-semibold text-primary"
             >
               Créez-en un

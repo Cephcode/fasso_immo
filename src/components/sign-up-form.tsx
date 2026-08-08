@@ -11,13 +11,16 @@ import { Text } from '@/components/ui/text';
 import { supabase } from '@/lib/supabase';
 import { THEME } from '@/lib/theme';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import * as React from 'react';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, TextInput, TouchableOpacity, View } from 'react-native';
 
 export function SignUpForm() {
   const router = useRouter();
+  // Permet de revenir sur l'écran d'origine après inscription (ex. l'onglet
+  // Publier, qui redirige ici en passant `?redirect=/(tabs)/publish`).
+  const { redirect } = useLocalSearchParams<{ redirect?: string }>();
   const passwordInputRef = React.useRef<TextInput>(null);
 
   // Form states
@@ -73,11 +76,16 @@ export function SignUpForm() {
         Alert.alert(
           'Compte créé !',
           'Un email de confirmation vous a été envoyé. Veuillez vérifier votre boîte de réception.',
-          [{ text: 'OK', onPress: () => router.push('/auth/login') }]
+          [
+            {
+              text: 'OK',
+              onPress: () => router.push({ pathname: '/auth/login', params: redirect ? { redirect } : undefined }),
+            },
+          ]
         );
       } else {
-        // Redirection vers l'application si l'authentification est directe
-        router.replace('/(tabs)/(home)');
+        // Redirection vers l'écran d'origine (ou l'accueil) si l'authentification est directe
+        router.replace((redirect as Href) ?? '/(tabs)/(home)');
       }
     } catch (err: any) {
       setErrorMessage(err.message || 'Une erreur inattendue est survenue.');
@@ -190,7 +198,7 @@ export function SignUpForm() {
           <Text className="text-center text-sm text-muted-foreground">
             Vous avez déjà un compte ?{' '}
             <Text
-              onPress={() => router.push('/auth/login')}
+              onPress={() => router.push({ pathname: '/auth/login', params: redirect ? { redirect } : undefined })}
               className="text-sm font-semibold text-primary"
             >
               Connectez-vous

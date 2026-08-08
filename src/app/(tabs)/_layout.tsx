@@ -1,58 +1,23 @@
 import { GlassSurface } from '@/components/ui/glass-view';
 import Header from '@/components/ui/header';
+import { useAuth } from '@/hooks/useAuth';
 import { usePushRegistration } from '@/hooks/usePushRegistration';
-import { isLoggedIn } from '@/lib/isUserloggedIn';
-import { supabase } from '@/lib/supabase';
 import { THEME } from '@/lib/theme';
 import { Octicons } from '@expo/vector-icons';
-import { Redirect, Tabs } from "expo-router";
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { router, Tabs } from 'expo-router';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabsLayout() {
   const colors = THEME.light;
   const insets = useSafeAreaInsets();
 
-  const [isConnected, setIsConnected] = useState<boolean | null>(null);
-  usePushRegistration(isConnected === true);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    // 1. Vérification initiale auprès de Supabase
-    isLoggedIn().then((loggedIn) => {
-      if (isMounted) setIsConnected(loggedIn);
-    });
-
-    // 2. Écouteur en temps réel pour capturer la déconnexion/suppression
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT' || !session) {
-        if (isMounted) setIsConnected(false);
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        if (isMounted) setIsConnected(true);
-      }
-    });
-
-    return () => {
-      isMounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  // Écran de chargement pendant la vérification
-  if (isConnected === null) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
-
-  // Si non connecté (ou utilisateur supprimé dans Supabase), redirection vers Auth
-  if (!isConnected) {
-    return <Redirect href="/auth/sign-up" />;
-  }
+  // L'app est désormais accessible sans compte : les annonces (onglet
+  // "Découvrir") s'affichent dès l'ouverture. Seul l'onglet "Publier" exige
+  // une connexion — voir le blocage de navigation ci-dessous et la garde
+  // au niveau de l'écran lui-même (publish/index.tsx) pour les accès directs.
+  const { isLoggedIn } = useAuth();
+  usePushRegistration(isLoggedIn === true);
 
   const tabIconColor = (focused: boolean) => (focused ? colors.primary : colors.mutedForegroundSecond);
 
@@ -137,6 +102,18 @@ export default function TabsLayout() {
               <Octicons name={focused ? "feed-plus" : "plus-circle"} size={22} color={tabIconColor(focused)} />
             ),
           }}
+          listeners={{
+            tabPress: (e) => {
+              // Onglet réservé aux utilisateurs connectés : tant que l'état
+              // de connexion n'est pas encore confirmé (isLoggedIn === null),
+              // on laisse passer — l'écran publish/index.tsx refait la
+              // vérification et affiche sa propre garde en cas de besoin.
+              if (isLoggedIn === false) {
+                e.preventDefault();
+                router.push({ pathname: '/auth/login', params: { redirect: '/(tabs)/publish' } });
+              }
+            },
+          }}
         />
 
         <Tabs.Screen
@@ -156,6 +133,16 @@ export default function TabsLayout() {
             tabBarIcon: ({ focused }) => (
               <Octicons name={focused ? "person-fill" : "person"} size={22} color={tabIconColor(focused)} />
             ),
+          }}
+          listeners={{
+            tabPress: (e) => {
+              // Même garde que l'onglet Publier : le profil affiche des
+              // informations personnelles, donc réservé aux connectés.
+              if (isLoggedIn === false) {
+                e.preventDefault();
+                router.push({ pathname: '/auth/login', params: { redirect: '/(tabs)/profile' } });
+              }
+            },
           }}
         />
       </Tabs>

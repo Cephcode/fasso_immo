@@ -1,24 +1,21 @@
+import type { ListingFilters } from '@/hooks/useListingFilters';
+import { toImageUrl } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
-import type { Listing, Post } from '@/types/listing';
+import type { Listing } from '@/types/listing';
 import { useCallback, useEffect, useState } from 'react';
 
 const PAGE_SIZE = 10;
 
-const PROPERTY_TYPE_LABELS: Record<Post['propertyType'], string> = {
-  House: 'Maison',
-  Apartment: 'Appartement',
-  Condo: 'Condo',
-  Townhouse: 'Maison de ville',
-  Land: 'Terrain',
-};
-
 export function mapRowToListing(row: any): Listing {
+  // Pas le nombre de pièces sur la carte : chambres + (salon ou garage),
+  // les infos qui aident vraiment à trier un logement au premier coup d'œil.
   const features: Listing['features'] = [
-    { icon: 'bed-outline', label: String(row.rooms_count ?? 0) },
-    {
-      icon: 'home-outline',
-      label: PROPERTY_TYPE_LABELS[row.property_type as Post['propertyType']] ?? row.property_type,
-    },
+    ...(row.bedrooms_number != null ? [{ icon: 'bed-outline' as const, label: `${row.bedrooms_number} ch.` }] : []),
+    ...(row.livingrooms_number != null
+      ? [{ icon: 'sofa-outline' as const, label: `${row.livingrooms_number} salon${row.livingrooms_number > 1 ? 's' : ''}` }]
+      : row.garage_cars_number > 0
+        ? [{ icon: 'garage-variant' as const, label: `${row.garage_cars_number} garage` }]
+        : []),
   ];
 
   return {
@@ -27,12 +24,12 @@ export function mapRowToListing(row: any): Listing {
     price: row.price,
     city: row.city,
     neighborhood: row.neighborhood,
-    coverPhotoUrl: `${process.env.EXPO_PUBLIC_IMAGE_BASE_URL}${row.photos_id?.['1'] ?? ''}`,
+    coverPhotoUrl: toImageUrl(row.photos_urls?.['1'] ?? ''),
     features,
   };
 }
 
-export function useListings() {
+export function useListings(filters: ListingFilters) {
   const [listings, setListings] = useState<Listing[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -45,11 +42,29 @@ export function useListings() {
     const from = pageToLoad * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
 
-    const { data, error: fetchError } = await supabase
+    let query = supabase
       .from('posts')
-      .select('id, title, price, city, neighborhood, photos_id, rooms_count, property_type')
-      .order('created_at', { ascending: false })
-      .range(from, to);
+      .select(
+        'id, title, price, city, neighborhood, photos_urls, rooms_count, property_type, bedrooms_number, bathrooms_number, livingrooms_number, garage_cars_number'
+      );
+
+    if (filters.city) query = query.eq('city', filters.city);
+    if (filters.neighborhood) query = query.eq('neighborhood', filters.neighborhood);
+    if (filters.propertyType) query = query.eq('property_type', filters.propertyType);
+    if (filters.priceMin != null) query = query.gte('price', filters.priceMin);
+    if (filters.priceMax != null) query = query.lte('price', filters.priceMax);
+    if (filters.roomsMin != null) query = query.gte('rooms_count', filters.roomsMin);
+    if (filters.bedroomsMin != null) query = query.gte('bedrooms_number', filters.bedroomsMin);
+    if (filters.bathroomsMin != null) query = query.gte('bathrooms_number', filters.bathroomsMin);
+    if (filters.livingroomsMin != null) query = query.gte('livingrooms_number', filters.livingroomsMin);
+    if (filters.garageCarsMin != null) query = query.gte('garage_cars_number', filters.garageCarsMin);
+
+    query =
+      filters.priceSort != null
+        ? query.order('price', { ascending: filters.priceSort === 'asc' })
+        : query.order('created_at', { ascending: false });
+
+    const { data, error: fetchError } = await query.range(from, to);
 
     if (fetchError) {
       setError(fetchError.message);
@@ -59,7 +74,7 @@ export function useListings() {
     const mapped = (data ?? []).map(mapRowToListing);
     setHasMore(mapped.length === PAGE_SIZE);
     setListings((prev) => (replace ? mapped : [...prev, ...mapped]));
-  }, []);
+  }, [filters]);
 
   const loadInitial = useCallback(async () => {
     setLoading(true);

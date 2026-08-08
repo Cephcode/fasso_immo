@@ -1,14 +1,22 @@
 import { GlassBlurRoot, GlassSurface } from '@/components/ui/glass-view';
 import { Input } from '@/components/ui/input';
+import { LocationPicker } from '@/components/ui/location-picker';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { PhotoPicker } from '@/components/ui/photo-picker';
+import { SignInRequired } from '@/components/ui/sign-in-required';
 import { Text } from '@/components/ui/text';
+import { VideoPicker } from '@/components/ui/video-picker';
+import { useAuth } from '@/hooks/useAuth';
 import { useCreatePost } from '@/hooks/useCreatePost';
+import { PROPERTY_TYPE_ICONS } from '@/lib/property-type-icons';
 import { PROPERTY_TYPE_LABELS } from '@/lib/property-type-labels';
+import { toImageUrl, toVideoUrl } from '@/lib/storage';
+import { supabase } from '@/lib/supabase';
 import { THEME } from '@/lib/theme';
 import type { Post } from '@/types/listing';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -21,15 +29,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-type PropertyType = Post['propertyType'];
-
-const PROPERTY_TYPE_ICONS: Record<PropertyType, keyof typeof MaterialCommunityIcons.glyphMap> = {
-  House: 'home-outline',
-  Apartment: 'office-building-outline',
-  Condo: 'domain',
-  Townhouse: 'home-city-outline',
-  Land: 'terrain',
-};
+type PropertyType = Post['property_type'];
 
 const PROPERTY_TYPES = Object.keys(PROPERTY_TYPE_LABELS) as PropertyType[];
 
@@ -40,57 +40,155 @@ function FieldLabel({ children }: { children: string }) {
 export default function PublishScreen() {
   const colors = THEME.light;
   const insets = useSafeAreaInsets();
-  const { createPost, submitting } = useCreatePost();
+  const { createPost, updatePost, submitting } = useCreatePost();
+  const { isLoggedIn } = useAuth();
+  const { editId } = useLocalSearchParams<{ editId?: string }>();
+  const isEditing = Boolean(editId);
 
   const [photos, setPhotos] = useState<string[]>([]);
+  const [videos, setVideos] = useState<string[]>([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [propertyType, setPropertyType] = useState<PropertyType>('Apartment');
   const [roomsCount, setRoomsCount] = useState(1);
+  const [bedroomsCount, setBedroomsCount] = useState(1);
+  const [bathroomsCount, setBathroomsCount] = useState(1);
+  const [livingroomsCount, setLivingroomsCount] = useState(1);
+  const [garageCarsCount, setGarageCarsCount] = useState(0);
   const [price, setPrice] = useState('');
   const [country, setCountry] = useState('Burkina Faso');
   const [city, setCity] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
+  const [locationUrl, setLocationUrl] = useState('');
+  const [loadingPost, setLoadingPost] = useState(isEditing);
 
-  const isValid =
-    title.trim().length > 0 &&
-    description.trim().length > 0 &&
-    city.trim().length > 0 &&
-    neighborhood.trim().length > 0 &&
-    Number(price) > 0 &&
-    photos.length > 0;
+  // Mode édition : précharge l'annonce existante et pré-remplit le
+  // formulaire. Les médias existants sont représentés par leur URL publique
+  // (voir useCreatePost.buildPayload, qui ne les ré-uploade pas).
+  useEffect(() => {
+    if (!editId) return;
+
+    let isMounted = true;
+    setLoadingPost(true);
+
+    supabase
+      .from('posts')
+      .select('*')
+      .eq('id', editId)
+      .single()
+      .then(({ data, error }) => {
+        if (isMounted && !error && data) {
+          const post = data as Post;
+          setTitle(post.title);
+          setDescription(post.description);
+          setPropertyType(post.property_type);
+          setRoomsCount(post.rooms_count);
+          setBedroomsCount(post.bedrooms_number ?? 1);
+          setBathroomsCount(post.bathrooms_number ?? 1);
+          setLivingroomsCount(post.livingrooms_number ?? 1);
+          setGarageCarsCount(post.garage_cars_number ?? 0);
+          setPrice(String(post.price));
+          setCountry(post.country);
+          setCity(post.city);
+          setNeighborhood(post.neighborhood);
+          setPhotos(Object.values(post.photos_urls ?? {}).filter(Boolean).map(toImageUrl));
+          setVideos(Object.values(post.videos_url ?? {}).filter(Boolean).map(toVideoUrl));
+          setLocationUrl(post.location_url ?? '');
+        }
+        if (isMounted) setLoadingPost(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [editId]);
+
+  // Garde d'authentification : `null` pendant la vérification (on affiche un
+  // simple loader pour éviter un flash du formulaire), `false` -> écran de
+  // connexion, `true` -> formulaire de publication.
+  if (isLoggedIn === null || loadingPost) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (isLoggedIn === false) {
+    return (
+      <SignInRequired
+        redirect="/(tabs)/publish"
+        message="Connecte-toi ou crée un compte pour publier une annonce."
+      />
+    );
+  }
+
+  const missingFields = [
+    photos.length === 0 && 'une photo',
+    title.trim().length === 0 && 'un titre',
+    description.trim().length === 0 && 'une description',
+    city.trim().length === 0 && 'une ville',
+    neighborhood.trim().length === 0 && 'un quartier',
+    !(Number(price) > 0) && 'un prix',
+  ].filter((v): v is string => Boolean(v));
+
+  const isValid = missingFields.length === 0;
 
   const resetForm = () => {
     setPhotos([]);
+    setVideos([]);
     setTitle('');
     setDescription('');
     setPropertyType('Apartment');
     setRoomsCount(1);
+    setBedroomsCount(1);
+    setBathroomsCount(1);
+    setLivingroomsCount(1);
+    setGarageCarsCount(0);
     setPrice('');
     setCity('');
     setNeighborhood('');
+    setLocationUrl('');
   };
 
   const handleSubmit = async () => {
     if (!isValid || submitting) return;
 
-    try {
-      const id = await createPost({
-        title: title.trim(),
-        description: description.trim(),
-        propertyType,
-        roomsCount,
-        price: Number(price),
-        country: country.trim(),
-        city: city.trim(),
-        neighborhood: neighborhood.trim(),
-        photos,
-      });
+    const input = {
+      title: title.trim(),
+      description: description.trim(),
+      propertyType,
+      roomsCount,
+      bedroomsCount,
+      bathroomsCount,
+      livingroomsCount,
+      garageCarsCount,
+      price: Number(price),
+      country: country.trim(),
+      city: city.trim(),
+      neighborhood: neighborhood.trim(),
+      photos,
+      videos,
+      locationUrl,
+    };
 
+    try {
+      if (isEditing && editId) {
+        await updatePost(editId, input);
+        router.back();
+        return;
+      }
+
+      const id = await createPost(input);
       resetForm();
       router.push({ pathname: '/property/[id]', params: { id } });
-    } catch {
-      Alert.alert('Publication impossible', "L'annonce n'a pas pu être publiée. Réessaie dans un instant.");
+    } catch (err) {
+      console.error('[publish] échec de la sauvegarde', err);
+      const detail = err instanceof Error ? err.message : String(err);
+      Alert.alert(
+        isEditing ? 'Mise à jour impossible' : 'Publication impossible',
+        `L'annonce n'a pas pu être enregistrée. ${detail}`
+      );
     }
   };
 
@@ -110,13 +208,17 @@ export default function PublishScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View className="gap-1">
-            <Text className="text-2xl font-bold tracking-tight text-foreground">Publier une annonce</Text>
+            <Text className="text-2xl font-bold tracking-tight text-foreground">
+              {isEditing ? "Modifier l'annonce" : 'Publier une annonce'}
+            </Text>
             <Text className="text-sm text-muted-foreground">
               Ajoute les informations de ton bien pour le mettre en ligne.
             </Text>
           </View>
 
           <PhotoPicker photos={photos} onChange={setPhotos} maxPhotos={10} />
+
+          <VideoPicker videos={videos} onChange={setVideos} maxVideos={3} />
 
           <View className="gap-2">
             <FieldLabel>Titre de l&apos;annonce</FieldLabel>
@@ -192,6 +294,18 @@ export default function PublishScreen() {
           </View>
 
           <View className="gap-2">
+            <FieldLabel>Caractéristiques</FieldLabel>
+            <View className="flex-row gap-3">
+              <NumberStepper icon="bed-outline" label="Chambres" value={bedroomsCount} onChange={setBedroomsCount} min={0} />
+              <NumberStepper icon="shower" label="Salles de bain" value={bathroomsCount} onChange={setBathroomsCount} min={0} />
+            </View>
+            <View className="flex-row gap-3">
+              <NumberStepper icon="sofa-outline" label="Salons" value={livingroomsCount} onChange={setLivingroomsCount} min={0} />
+              <NumberStepper icon="garage-variant" label="Places garage" value={garageCarsCount} onChange={setGarageCarsCount} min={0} />
+            </View>
+          </View>
+
+          <View className="gap-2">
             <FieldLabel>Prix mensuel (FCFA)</FieldLabel>
             <Input value={price} onChangeText={setPrice} placeholder="Ex. 150000" keyboardType="numeric" />
           </View>
@@ -211,6 +325,8 @@ export default function PublishScreen() {
             <FieldLabel>Pays</FieldLabel>
             <Input value={country} onChangeText={setCountry} placeholder="Burkina Faso" />
           </View>
+
+          <LocationPicker value={locationUrl} onChange={setLocationUrl} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -220,9 +336,9 @@ export default function PublishScreen() {
       <View className="absolute bottom-0 left-0 right-0 px-4" style={{ paddingBottom: insets.bottom + 12 }}>
         <GlassSurface intensity="thick" className="flex-row items-center gap-3 rounded-[26px] p-3">
           <Text className="flex-1 px-1 text-xs text-muted-foreground">
-            {photos.length === 0
-              ? 'Ajoute au moins une photo pour publier.'
-              : `${photos.length} photo${photos.length > 1 ? 's' : ''} sélectionnée${photos.length > 1 ? 's' : ''}`}
+            {isValid
+              ? `${photos.length} photo${photos.length > 1 ? 's' : ''} sélectionnée${photos.length > 1 ? 's' : ''}`
+              : `Ajoute ${missingFields.join(', ')} pour publier.`}
           </Text>
           <Pressable
             onPress={handleSubmit}
@@ -236,7 +352,9 @@ export default function PublishScreen() {
             {submitting ? (
               <ActivityIndicator color={colors.primaryForeground} />
             ) : (
-              <Text className="font-semibold text-primary-foreground">Publier</Text>
+              <Text className="font-semibold text-primary-foreground">
+                {isEditing ? 'Mettre à jour' : 'Publier'}
+              </Text>
             )}
           </Pressable>
         </GlassSurface>

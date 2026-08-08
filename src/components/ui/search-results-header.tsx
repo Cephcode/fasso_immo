@@ -42,7 +42,7 @@ export function SearchResultsHeader({
       className="w-full border-b border-border/60"
       style={{ paddingTop: insets.top + 10 }}
     >
-      <View className="gap-2.5 px-4 pb-3">
+      <View className="w-full gap-2.5 px-4 pb-3">
         <View className="flex-row items-center gap-2.5">
           <Pressable
             onPress={onBack}

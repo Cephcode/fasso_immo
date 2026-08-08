@@ -1,4 +1,5 @@
 import type { DiscussionListItem, DiscussionMessage } from '@/lib/discussions';
+import { toImageUrl } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -74,12 +75,13 @@ export function useDiscussions() {
 
     const postsById = new Map<string, DiscussionListItem['post']>();
     if (postIds.length > 0) {
-      const { data: postRows } = await supabase.from('posts').select('id, title, photos_id').in('id', postIds);
+      const { data: postRows } = await supabase.from('posts').select('id, title, photos_urls').in('id', postIds);
       for (const post of postRows ?? []) {
+        const photosUrl = (post.photos_urls ?? {}) as Record<string, string>;
         postsById.set(post.id, {
           id: post.id,
           title: post.title,
-          coverPhotoUrl: `${process.env.EXPO_PUBLIC_IMAGE_BASE_URL}${Object.values(post.photos_id ?? {})[0] ?? ''}`,
+          coverPhotoUrl: toImageUrl(Object.values(photosUrl)[0] ?? ''),
         });
       }
     }

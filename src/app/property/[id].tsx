@@ -6,7 +6,7 @@ import { THEME } from '@/lib/theme';
 import type { Post } from '@/types/listing';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, View } from 'react-native';
 
 export default function PropertyDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -58,5 +58,16 @@ export default function PropertyDetailScreen() {
     }
   };
 
-  return <PropertyDetail post={post} onBack={() => router.back()} onContactPress={handleContactPress} />;
+  const handleOpenMaps = () => {
+    if (post.location_url) Linking.openURL(post.location_url);
+  };
+
+  return (
+    <PropertyDetail
+      post={post}
+      onBack={() => router.back()}
+      onContactPress={handleContactPress}
+      onOpenMaps={handleOpenMaps}
+    />
+  );
 }

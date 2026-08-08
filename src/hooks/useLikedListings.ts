@@ -20,7 +20,7 @@ export function useLikedListings() {
     setLoading(true);
     const { data } = await supabase
       .from('posts')
-      .select('id, title, price, city, neighborhood, photos_id, rooms_count, property_type')
+      .select('id, title, price, city, neighborhood, photos_urls, rooms_count, property_type')
       .in('id', Array.from(likedIds))
       .order('created_at', { ascending: false });
 

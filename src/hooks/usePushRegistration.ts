@@ -42,18 +42,17 @@ export function usePushRegistration(enabled: boolean) {
       } = await supabase.auth.getUser();
       if (!user || cancelled) return;
 
-      // delete puis insert plutôt qu'un upsert : évite de dépendre d'une
-      // contrainte unique sur `user_id` (dont on n'est pas sûr côté DB) tout
-      // en garantissant qu'un seul jeton par utilisateur reste en base — un
-      // doublon ferait échouer le `.maybeSingle()` de notifyNewMessage et
-      // bloquerait silencieusement l'envoi des notifications.
-      const { error: deleteError } = await supabase.from('push_tokens').delete().eq('user_id', user.id);
-      if (deleteError) console.warn('[usePushRegistration] delete failed:', deleteError);
-
-      const { error: insertError } = await supabase
+      // upsert sur `user_id` (clé primaire de la table, confirmée par le
+      // 42P10 obtenu en testant onConflict: 'token' — aucune contrainte
+      // unique n'existe sur cette colonne). Un delete-puis-insert échouait
+      // ici (23505 sur push_tokens_pkey) quand l'effet se déclenchait deux
+      // fois en concurrence (ex: remount en dev) : les deux delete passaient
+      // avant que l'un des deux insert ne s'exécute. L'upsert est atomique
+      // et absorbe ce cas en mettant simplement à jour la ligne existante.
+      const { error: upsertError } = await supabase
         .from('push_tokens')
-        .insert({ user_id: user.id, token, updated_at: new Date().toISOString() });
-      if (insertError) console.warn('[usePushRegistration] insert failed:', insertError);
+        .upsert({ user_id: user.id, token, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+      if (upsertError) console.warn('[usePushRegistration] upsert failed:', upsertError);
     }
 
     register().catch((error) => {

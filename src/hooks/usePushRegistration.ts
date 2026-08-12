@@ -42,7 +42,13 @@ export function usePushRegistration(enabled: boolean) {
       } = await supabase.auth.getUser();
       if (!user || cancelled) return;
 
-      await supabase.from('push_tokens').upsert({ user_id: user.id, token, updated_at: new Date().toISOString() });
+      // delete puis insert plutôt qu'un upsert : évite de dépendre d'une
+      // contrainte unique sur `user_id` (dont on n'est pas sûr côté DB) tout
+      // en garantissant qu'un seul jeton par utilisateur reste en base — un
+      // doublon ferait échouer le `.maybeSingle()` de notifyNewMessage et
+      // bloquerait silencieusement l'envoi des notifications.
+      await supabase.from('push_tokens').delete().eq('user_id', user.id);
+      await supabase.from('push_tokens').insert({ user_id: user.id, token, updated_at: new Date().toISOString() });
     }
 
     register().catch(() => {

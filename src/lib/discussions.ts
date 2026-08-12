@@ -72,14 +72,24 @@ export async function getOrCreateDiscussion(otherUserId: string, postId: string)
  */
 export async function notifyNewMessage(recipientId: string, body: string) {
   try {
-    const { data } = await supabase.from('push_tokens').select('token').eq('user_id', recipientId).maybeSingle();
-    if (!data?.token) return;
+    // `.limit(1)` plutôt que `.maybeSingle()` : si d'anciens doublons
+    // traînent encore en base (avant le passage à delete+insert dans
+    // usePushRegistration.ts), `.maybeSingle()` renvoie une erreur sur
+    // plusieurs lignes et on ne préviendrait plus jamais le destinataire.
+    const { data } = await supabase
+      .from('push_tokens')
+      .select('token')
+      .eq('user_id', recipientId)
+      .order('updated_at', { ascending: false })
+      .limit(1);
+    const token = data?.[0]?.token;
+    if (!token) return;
 
     await fetch(EXPO_PUSH_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({
-        to: data.token,
+        to: token,
         title: 'Nouveau message',
         body,
         sound: 'default',

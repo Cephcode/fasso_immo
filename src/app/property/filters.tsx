@@ -12,7 +12,7 @@ import type { Post } from '@/types/listing';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type PropertyType = Post['property_type'];
@@ -48,7 +48,7 @@ export default function FiltersScreen() {
   const reset = () => setDraft(DEFAULT_LISTING_FILTERS);
 
   const screenContent = (
-    <>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
       <View
         className="flex-row items-center gap-3 border-b border-border px-4 pb-3"
         style={{ paddingTop: insets.top + 12 }}
@@ -227,7 +227,7 @@ export default function FiltersScreen() {
           </View>
         </View>
       </ScrollView>
-    </>
+    </KeyboardAvoidingView>
   );
 
   return (

@@ -4,8 +4,8 @@ import { getOrCreateDiscussion } from '@/lib/discussions';
 import { supabase } from '@/lib/supabase';
 import { THEME } from '@/lib/theme';
 import type { Post } from '@/types/listing';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, View } from 'react-native';
 
 export default function PropertyDetailScreen() {
@@ -15,22 +15,30 @@ export default function PropertyDetailScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let isMounted = true;
-
-    async function fetchPost() {
-      const { data, error } = await supabase.from('posts').select('*').eq('id', id).single();
-
-      if (isMounted) {
-        if (!error) setPost(data);
-        setLoading(false);
-      }
-    }
-
-    if (id) fetchPost();
-    return () => {
-      isMounted = false;
-    };
+    setLoading(true);
   }, [id]);
+
+  // Rechargé au montage (nouvel `id`) et à chaque retour sur l'écran, pour
+  // refléter une modification faite entre-temps (ex. depuis "Mes annonces").
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
+
+      async function fetchPost() {
+        const { data, error } = await supabase.from('posts').select('*').eq('id', id).single();
+
+        if (isMounted) {
+          if (!error) setPost(data);
+          setLoading(false);
+        }
+      }
+
+      if (id) fetchPost();
+      return () => {
+        isMounted = false;
+      };
+    }, [id])
+  );
 
   if (loading) {
     return (

@@ -6,7 +6,8 @@ import { THEME } from '@/lib/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useRef } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 
 function DiscussionRow({ item }: { item: DiscussionListItem }) {
@@ -64,6 +65,20 @@ function DiscussionRow({ item }: { item: DiscussionListItem }) {
 export default function DiscussionsScreen() {
   const colors = THEME.light;
   const { discussions, loading, error, refresh } = useDiscussions();
+
+  // Recharge la liste (et donc les compteurs "non lus") à chaque retour sur
+  // cet écran : useDiscussions ne charge qu'au montage, donc lire une
+  // discussion puis revenir ici laissait l'ancien compteur affiché.
+  const isFirstFocus = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (isFirstFocus.current) {
+        isFirstFocus.current = false;
+        return;
+      }
+      refresh();
+    }, [refresh])
+  );
 
   return (
     <View className="flex-1 bg-background">

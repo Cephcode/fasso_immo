@@ -19,7 +19,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.ceph_code.fasso_immo"
+      "package": "com.ceph_code.fasso_immo",
+      "googleServicesFile": "./android/app/google-services.json"
     },
     "web": {
       "output": "static",

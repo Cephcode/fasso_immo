@@ -1,5 +1,6 @@
 import { LikedPostsProvider } from '@/hooks/useLikedPosts';
 import { ListingFiltersProvider } from '@/hooks/useListingFilters';
+import { emitNewMessage } from '@/lib/messageEvents';
 import { NAV_THEME } from '@/lib/theme';
 import { Stack } from 'expo-router';
 import { ThemeProvider } from 'expo-router/react-navigation';
@@ -28,6 +29,19 @@ export default function RootLayout() {
     // Doit s'exécuter après le montage (et non au niveau module) car sur web
     // ce fichier est d'abord évalué côté serveur, où `window` n'existe pas.
     nativewindColorScheme.set('light');
+  }, []);
+
+  useEffect(() => {
+    // Relaie l'arrivée d'une notif de nouveau message aux écrans de
+    // discussion montés (voir lib/messageEvents.ts), pour une sensation de
+    // temps réel sans abonnement Supabase Realtime.
+    const subscription = Notifications.addNotificationReceivedListener((notification) => {
+      const discussionId = notification.request.content.data?.discussionId;
+      if (typeof discussionId === 'string') {
+        emitNewMessage(discussionId);
+      }
+    });
+    return () => subscription.remove();
   }, []);
 
   return (

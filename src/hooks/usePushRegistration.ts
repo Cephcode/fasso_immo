@@ -47,13 +47,21 @@ export function usePushRegistration(enabled: boolean) {
       // en garantissant qu'un seul jeton par utilisateur reste en base — un
       // doublon ferait échouer le `.maybeSingle()` de notifyNewMessage et
       // bloquerait silencieusement l'envoi des notifications.
-      await supabase.from('push_tokens').delete().eq('user_id', user.id);
-      await supabase.from('push_tokens').insert({ user_id: user.id, token, updated_at: new Date().toISOString() });
+      const { error: deleteError } = await supabase.from('push_tokens').delete().eq('user_id', user.id);
+      if (deleteError) console.warn('[usePushRegistration] delete failed:', deleteError);
+
+      const { error: insertError } = await supabase
+        .from('push_tokens')
+        .insert({ user_id: user.id, token, updated_at: new Date().toISOString() });
+      if (insertError) console.warn('[usePushRegistration] insert failed:', insertError);
     }
 
-    register().catch(() => {
+    register().catch((error) => {
       // L'enregistrement du jeton est un bonus : une erreur ici ne doit pas
-      // empêcher l'utilisation de l'app.
+      // empêcher l'utilisation de l'app, mais on la log pour diagnostiquer
+      // (ex: getExpoPushTokenAsync qui échoue si Firebase n'est pas
+      // correctement initialisé côté natif).
+      console.warn('[usePushRegistration] failed:', error);
     });
 
     return () => {

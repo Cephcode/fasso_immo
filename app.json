@@ -20,7 +20,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.ceph_code.fasso_immo",
-      "googleServicesFile": "./android/app/google-services.json"
+      "googleServicesFile":"./google-services.json"
     },
     "web": {
       "output": "static",

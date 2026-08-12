@@ -1,4 +1,5 @@
 import type { DiscussionListItem, DiscussionMessage } from '@/lib/discussions';
+import { onNewMessage } from '@/lib/messageEvents';
 import { toImageUrl } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 import { useCallback, useEffect, useState } from 'react';
@@ -120,6 +121,15 @@ export function useDiscussions() {
 
   useEffect(() => {
     load();
+  }, [load]);
+
+  // Sensation de temps réel : dès qu'une notif de nouveau message arrive
+  // (n'importe quelle discussion), on recharge la liste pour mettre à jour
+  // aperçu/badge non lu tant que cet écran est ouvert.
+  useEffect(() => {
+    return onNewMessage(() => {
+      load();
+    });
   }, [load]);
 
   return { discussions, loading, error, refresh: load };

@@ -70,7 +70,7 @@ export async function getOrCreateDiscussion(otherUserId: string, postId: string)
  * destinataire est lu dans `push_tokens` (voir usePushRegistration.ts). Un
  * échec ici ne doit jamais empêcher l'envoi du message lui-même.
  */
-export async function notifyNewMessage(recipientId: string, body: string) {
+export async function notifyNewMessage(recipientId: string, body: string, discussionId: string) {
   try {
     // `.limit(1)` plutôt que `.maybeSingle()` : si d'anciens doublons
     // traînent encore en base (avant le passage à delete+insert dans
@@ -85,7 +85,7 @@ export async function notifyNewMessage(recipientId: string, body: string) {
     const token = data?.[0]?.token;
     if (!token) return;
 
-    await fetch(EXPO_PUSH_ENDPOINT, {
+    const response = await fetch(EXPO_PUSH_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({
@@ -93,9 +93,20 @@ export async function notifyNewMessage(recipientId: string, body: string) {
         title: 'Nouveau message',
         body,
         sound: 'default',
+        data: { discussionId },
       }),
     });
-  } catch {
-    // Bonus non bloquant : on ignore silencieusement les erreurs réseau ici.
+
+    // L'API Expo Push répond 200 même en cas d'échec de relais vers FCM :
+    // l'erreur est dans le "ticket" du corps de la réponse, pas le status HTTP.
+    const result = await response.json();
+    const ticket = result?.data;
+    if (!response.ok || ticket?.status === 'error') {
+      console.warn('[notifyNewMessage] Expo push ticket error:', ticket ?? result);
+    }
+  } catch (error) {
+    // Bonus non bloquant : une erreur ici ne doit pas empêcher l'envoi du
+    // message, mais on la log pour pouvoir diagnostiquer.
+    console.warn('[notifyNewMessage] failed:', error);
   }
 }

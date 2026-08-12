@@ -1,5 +1,6 @@
 import type { DiscussionMessage } from '@/lib/discussions';
 import { notifyNewMessage } from '@/lib/discussions';
+import { onNewMessage } from '@/lib/messageEvents';
 import { supabase } from '@/lib/supabase';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -66,13 +67,27 @@ export function useDiscussion(discussionId: string) {
 
     const unreadIds = (messageRows ?? []).filter((m) => m.sender_id !== user.id && !m.is_read).map((m) => m.id);
     if (unreadIds.length > 0) {
-      await supabase.from('messages').update({ is_read: true }).in('id', unreadIds);
+      const { error: markReadError } = await supabase.from('messages').update({ is_read: true }).in('id', unreadIds);
+      if (markReadError) {
+        console.warn('[useDiscussion] failed to mark messages as read:', markReadError);
+      } else {
+        setMessages((prev) => prev.map((m) => (unreadIds.includes(m.id) ? { ...m, isRead: true } : m)));
+      }
     }
   }, [discussionId]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  // Sensation de temps réel : quand la notif push d'un nouveau message
+  // arrive pour CETTE discussion, on recharge tant que l'écran est ouvert —
+  // sans ça il faudrait quitter puis revenir pour voir le message.
+  useEffect(() => {
+    return onNewMessage((id) => {
+      if (id === discussionId) load();
+    });
+  }, [discussionId, load]);
 
   const sendMessage = async (content: string): Promise<boolean> => {
     const trimmed = content.trim();
@@ -117,7 +132,7 @@ export function useDiscussion(discussionId: string) {
       prev.map((m) => (m.id === optimisticId ? { ...m, id: data.id, createdAt: data.created_at } : m))
     );
 
-    notifyNewMessage(otherUserId, trimmed);
+    notifyNewMessage(otherUserId, trimmed, discussionId);
     return true;
   };
 

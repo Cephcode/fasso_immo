@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "439692505531",
+    "project_id": "fasso-immo",
+    "storage_bucket": "fasso-immo.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:439692505531:android:a6c02c4a0a10183a1a949e",
+        "android_client_info": {
+          "package_name": "com.ceph_code.fasso_immo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCP-9XOrAAYiMWrA7qxH8i28vA8zPTtuOM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

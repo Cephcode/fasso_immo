@@ -8,8 +8,9 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { FlashList, type FlashListRef } from '@shopify/flash-list';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
 
 type Row = { key: string } & ({ type: 'separator'; label: string } | { type: 'message'; message: DiscussionMessage });
 
@@ -39,6 +40,20 @@ export default function DiscussionScreen() {
   const { messages, currentUserId, postTitle, loading, sending, error, sendMessage } = useDiscussion(id);
   const [draft, setDraft] = useState('');
   const listRef = useRef<FlashListRef<Row>>(null);
+
+  // Remplace KeyboardAvoidingView : sous Android 15+/edge-to-edge,
+  // `windowSoftInputMode="adjustResize"` et l'API `Keyboard` classique de
+  // React Native ne rapportent plus fiablement la hauteur du clavier.
+  // `useAnimatedKeyboard` lit directement les insets natifs et fonctionne
+  // sur les deux plateformes.
+  const keyboard = useAnimatedKeyboard();
+  const keyboardAvoidingStyle = useAnimatedStyle(() => ({
+    // La barre a déjà `paddingBottom: insets.bottom + 10` pour dégager la
+    // zone de geste quand le clavier est fermé — on le retranche ici pour ne
+    // pas laisser ce même espace vide entre la barre et le clavier une fois
+    // ouvert (le clavier couvre déjà cette zone).
+    transform: [{ translateY: -Math.max(keyboard.height.value - insets.bottom, 0) }],
+  }));
 
   // Regroupe les messages par jour avec un séparateur, comme dans une
   // messagerie classique — pas de pagination/temps réel, juste le fil complet.
@@ -114,15 +129,13 @@ export default function DiscussionScreen() {
     </View>
   );
 
-  // KeyboardAvoidingView enveloppe tout l'écran (fil + barre de saisie) :
-  // la barre est positionnée en absolute par rapport à GlassBlurRoot, donc
-  // c'est le KeyboardAvoidingView qui doit réduire la hauteur de son enfant
-  // pour la faire remonter au-dessus du clavier iOS. Sur Android,
-  // windowSoftInputMode="adjustResize" (AndroidManifest) s'en charge nativement.
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
+    <View className="flex-1">
       <GlassBlurRoot className="flex-1 bg-background" background={body}>
-        <View className="absolute bottom-0 left-0 right-0 px-3" style={{ paddingBottom: insets.bottom + 10 }}>
+        <Animated.View
+          className="absolute bottom-0 left-0 right-0 px-3"
+          style={[{ paddingBottom: insets.bottom + 10 }, keyboardAvoidingStyle]}
+        >
           {error ? (
             <Text className="mb-2 px-1 text-center text-xs text-destructive">{error}</Text>
           ) : null}
@@ -151,8 +164,8 @@ export default function DiscussionScreen() {
               )}
             </Pressable>
           </GlassSurface>
-        </View>
+        </Animated.View>
       </GlassBlurRoot>
-    </KeyboardAvoidingView>
+    </View>
   );
 }

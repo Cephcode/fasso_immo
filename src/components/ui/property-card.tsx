@@ -20,12 +20,14 @@ type PropertyCardProps = {
   style?: StyleProp<ViewStyle>;
 };
 
+// Ombre teintée chaud (jamais noir pur) portée directement par la photo :
+// pas de conteneur blanc autour, la carte "flotte" sur le fond de la page.
 const CARD_SHADOW = {
-  shadowColor: '#000',
+  shadowColor: '#100C08',
   shadowOpacity: 0.1,
-  shadowRadius: 16,
-  shadowOffset: { width: 0, height: 6 },
-  elevation: 5,
+  shadowRadius: 11,
+  shadowOffset: { width: 0, height: 8 },
+  elevation: 6,
 };
 
 export function PropertyCard({ listing, onPress, style }: PropertyCardProps) {
@@ -33,15 +35,22 @@ export function PropertyCard({ listing, onPress, style }: PropertyCardProps) {
   const { isLiked, toggleLike } = useLikedPosts();
   const liked = isLiked(listing.id);
 
+  const hasBed = listing.bedrooms != null;
+  const hasBath = listing.bathrooms != null;
+  const hasSpecs = hasBed || hasBath;
+
   return (
     // L'ombre est posée ici, sur une vue SANS `overflow-hidden` — RN
     // clippe l'ombre portée si elle est sur la même vue que le clip du
     // visuel. Le Pressable ci-dessous garde `overflow-hidden` pour les
     // coins arrondis de la photo, sans jamais toucher au style d'ombre.
-    <View className="rounded-[22px] bg-card" style={[CARD_SHADOW, style]}>
-      <Pressable onPress={() => onPress?.(listing)} className="overflow-hidden rounded-[22px]">
+    <View className="rounded-[22px]" style={[CARD_SHADOW, style]}>
+      {/* `active:opacity-80` : léger retour tactile à l'appui — sans lui,
+          toucher une carte ne donne aucun signal visuel avant la navigation,
+          ce qui fait "inerte" plutôt que réactif. */}
+      <Pressable onPress={() => onPress?.(listing)} className="overflow-hidden rounded-[22px] active:opacity-80">
         <GlassBlurRoot
-          className="relative aspect-[4/3] w-full"
+          className="relative aspect-[3/4] w-full"
           background={
             <Image
               source={{ uri: listing.coverPhotoUrl }}
@@ -51,7 +60,7 @@ export function PropertyCard({ listing, onPress, style }: PropertyCardProps) {
             />
           }
         >
-          <GlassSurface intensity="thin" interactive className="absolute right-2 top-2 h-9 w-9 rounded-full">
+          <GlassSurface intensity="thin" interactive className="absolute right-2 top-2 h-8 w-8 rounded-full">
             <Pressable
               onPress={(e) => {
                 e.stopPropagation();
@@ -68,44 +77,42 @@ export function PropertyCard({ listing, onPress, style }: PropertyCardProps) {
             </Pressable>
           </GlassSurface>
 
-          <GlassSurface intensity="thin" className="absolute bottom-2 left-2 rounded-full">
-            <Text className="px-3 py-1.5 text-xs font-bold text-foreground">
-              {formatPrice(listing.price)}
-            </Text>
+          {/* Panneau de verre encastré : titre, quartier, prix, et
+              chambres/salles de bain en repli texte — toutes les infos de
+              la carte vivent désormais sur la photo. */}
+          <GlassSurface
+            intensity="regular"
+            bordered={false}
+            className="absolute bottom-1.5 left-1.5 right-1.5 items-stretch rounded-[17px]"
+            style={{ borderWidth: 1, borderColor: 'rgba(255,255,255,0.6)' }}
+          >
+            <View className="gap-0.5 px-2 py-2">
+              <Text numberOfLines={1} ellipsizeMode="tail" className="text-[13px] font-bold tracking-tight text-foreground">
+                {listing.title}
+              </Text>
+              <Text numberOfLines={1} ellipsizeMode="tail" className="text-[11px]" style={{ color: '#4A4A54' }}>
+                {listing.neighborhood}, {listing.city}
+              </Text>
+
+              {/* Le prix occupe toute la largeur du panneau, sur sa propre
+                  ligne — des pastilles chambres/salles de bain à côté du prix
+                  le poussaient hors du panneau (ou le tronquaient sur les
+                  prix longs). Chambres/salles de bain passent donc en texte
+                  compact sous le prix, comme le prévoit déjà le repli du
+                  design pour les cartes étroites — on l'utilise ici tout le
+                  temps plutôt que juste en dessous d'un seuil de largeur. */}
+              <Text numberOfLines={1} className="mt-0.5 text-[13px] font-bold text-foreground">
+                {formatPrice(listing.price)}
+              </Text>
+
+              {hasSpecs && (
+                <Text numberOfLines={1} className="text-[11px]" style={{ color: '#4A4A54' }}>
+                  {[hasBed && `${listing.bedrooms} ch.`, hasBath && `${listing.bathrooms} sdb`].filter(Boolean).join(' · ')}
+                </Text>
+              )}
+            </View>
           </GlassSurface>
         </GlassBlurRoot>
-
-        <View className="gap-1 p-3">
-          <Text
-            numberOfLines={1}
-            ellipsizeMode="tail"
-            className="text-base font-semibold text-card-foreground"
-          >
-            {listing.title}
-          </Text>
-
-          <View className="flex-row items-center gap-1">
-            <MaterialCommunityIcons name="map-marker-outline" size={12} color={colors.mutedForeground} />
-            <Text numberOfLines={1} ellipsizeMode="tail" className="flex-1 text-sm text-muted-foreground">
-              {listing.city}, {listing.neighborhood}
-            </Text>
-          </View>
-
-          {/* Hauteur fixe : la grille FlashList (numColumns=2, pas de masonry)
-              exige des cartes de même hauteur, sinon les colonnes "sautent"
-              pendant le scroll. Le nombre de tags ne doit donc jamais faire
-              varier la hauteur de la carte. */}
-          <View className="h-4 flex-row items-center gap-2 overflow-hidden">
-            {listing.features.map((feature, index) => (
-              <View key={index} className="flex-row items-center gap-0.5">
-                <MaterialCommunityIcons name={feature.icon} size={12} color={colors.mutedForeground} />
-                <Text numberOfLines={1} className="text-xs text-muted-foreground">
-                  {feature.label}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </View>
       </Pressable>
     </View>
   );

@@ -83,7 +83,8 @@ export function PhotoPicker({ photos, onChange, maxPhotos = 10 }: PhotoPickerPro
             style={{ width: TILE_WIDTH, aspectRatio: 1 }}
             className="mb-[3%] items-center justify-center gap-1 rounded-2xl border border-dashed border-border bg-secondary"
           >
-            <MaterialCommunityIcons name="camera-plus-outline" size={22} color={colors.mutedForeground} />
+            {/* Icône d'accent (color = primaryText) sur ce placeholder, comme dans la maquette v2 */}
+            <MaterialCommunityIcons name="camera-plus-outline" size={22} color={colors.primaryText} />
             <Text className="text-[11px] font-medium text-muted-foreground">Ajouter</Text>
           </Pressable>
         )}

@@ -1,5 +1,4 @@
 import { GlassSurface } from '@/components/ui/glass-view';
-import Header from '@/components/ui/header';
 import { useAuth } from '@/hooks/useAuth';
 import { usePushRegistration } from '@/hooks/usePushRegistration';
 import { THEME } from '@/lib/theme';
@@ -27,10 +26,12 @@ export default function TabsLayout() {
     // toujours nichée dans tout ce qui enveloppe <Tabs> — Android interdit
     // ce cas (voir glass-view.tsx). Elle garde donc le voile translucide
     // (sans flou natif) sur Android ; iOS a son vrai verre natif.
+    //
+    // Redesign v2 : plus de header global ici — "le header ne suit plus
+    // partout" (voir le doc de design). Seul l'accueil ((home)/index.tsx)
+    // affiche le panneau logo+recherche+filtres, en flottant au-dessus de sa
+    // propre grille ; les autres onglets ont chacun leur titre local.
     <View style={{ flex: 1 }} className="bg-background">
-      {/* Header affiché proprement au-dessus des onglets */}
-      <Header />
-
       <Tabs
         screenOptions={{
           headerShown: false,
@@ -64,7 +65,9 @@ export default function TabsLayout() {
                 intensity="regular"
                 className="flex-1 rounded-full"
                 style={{
-                  shadowColor: '#000',
+                  // #100C08 (pas #000) : ombre teintée chaud, comme partout
+                  // ailleurs sur les surfaces en verre — voir glass-view.tsx.
+                  shadowColor: '#100C08',
                   shadowOpacity: 0.08,
                   shadowRadius: 18,
                   shadowOffset: { width: 0, height: 6 },

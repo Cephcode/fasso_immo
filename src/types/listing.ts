@@ -1,12 +1,3 @@
-import type { MaterialCommunityIcons } from '@expo/vector-icons';
-
-export type ListingFeatureIcon = keyof typeof MaterialCommunityIcons.glyphMap;
-
-export interface ListingFeature {
-  icon: ListingFeatureIcon;
-  label: string;
-}
-
 // Ce que PropertyCard consomme — stable, indépendant du schéma DB
 export interface Listing {
   id: string;
@@ -15,7 +6,11 @@ export interface Listing {
   city: string;
   neighborhood: string;
   coverPhotoUrl: string;
-  features: ListingFeature[];
+  // Redesign v2 : la carte affiche des pastilles chambres/salles de bain
+  // dédiées (voir property-card.tsx) plutôt qu'une liste générique de
+  // caractéristiques — `null` quand l'annonce ne renseigne pas le champ.
+  bedrooms: number | null;
+  bathrooms: number | null;
 }
 
 // Ligne brute de la table `posts` — ton modèle réel

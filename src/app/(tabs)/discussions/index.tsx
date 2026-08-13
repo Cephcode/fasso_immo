@@ -1,6 +1,7 @@
 import { Text } from '@/components/ui/text';
 import { useDiscussions } from '@/hooks/useDiscussions';
 import type { DiscussionListItem } from '@/lib/discussions';
+import { FONT_DISPLAY_BOLD } from '@/lib/fonts';
 import { formatDiscussionTimestamp } from '@/lib/format';
 import { THEME } from '@/lib/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -9,6 +10,7 @@ import { Image } from 'expo-image';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function DiscussionRow({ item }: { item: DiscussionListItem }) {
   const colors = THEME.light;
@@ -22,7 +24,7 @@ function DiscussionRow({ item }: { item: DiscussionListItem }) {
   return (
     <Pressable
       onPress={() => router.push({ pathname: '/discussion/[id]', params: { id: item.id } })}
-      className="flex-row items-center gap-3 px-4 py-3"
+      className="flex-row items-center gap-3 px-4 py-3 active:opacity-70"
     >
       <View className="h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-secondary">
         {item.post ? (
@@ -64,6 +66,7 @@ function DiscussionRow({ item }: { item: DiscussionListItem }) {
 
 export default function DiscussionsScreen() {
   const colors = THEME.light;
+  const insets = useSafeAreaInsets();
   const { discussions, loading, error, refresh } = useDiscussions();
 
   // Recharge la liste (et donc les compteurs "non lus") à chaque retour sur
@@ -82,8 +85,14 @@ export default function DiscussionsScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <View className="border-b border-border px-4 pb-3 pt-4">
-        <Text className="text-2xl font-bold tracking-tight text-foreground">Discussions</Text>
+      {/* Redesign v2 : plus de header global au-dessus des onglets (voir
+          (tabs)/_layout.tsx) — cet écran doit donc gérer sa propre zone de
+          sécurité en haut, sous peine de démarrer sous l'encoche/la barre de
+          statut. */}
+      <View className="border-b border-border px-4 pb-3" style={{ paddingTop: insets.top + 12 }}>
+        <Text style={{ fontFamily: FONT_DISPLAY_BOLD }} className="text-[28px] tracking-tight text-foreground">
+          Discussions
+        </Text>
       </View>
 
       <FlashList
@@ -100,8 +109,8 @@ export default function DiscussionsScreen() {
             </View>
           ) : (
             <View className="items-center justify-center gap-3 px-8 py-24">
-              <View className="h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-                <MaterialCommunityIcons name="message-text-outline" size={26} color={colors.primary} />
+              <View className="h-14 w-14 items-center justify-center rounded-2xl bg-tint">
+                <MaterialCommunityIcons name="message-text-outline" size={26} color={colors.tintForeground} />
               </View>
               <Text className="text-lg font-semibold text-foreground">Aucune discussion</Text>
               <Text className="text-center text-sm text-muted-foreground">

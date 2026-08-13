@@ -52,10 +52,10 @@ export function OptionPickerModal({
                   }}
                   className="flex-row items-center justify-between rounded-2xl px-3 py-3.5"
                 >
-                  <Text className={selected ? 'text-sm font-semibold text-primary' : 'text-sm text-foreground'}>
+                  <Text className={selected ? 'text-sm font-semibold text-primary-text' : 'text-sm text-foreground'}>
                     {item ?? allLabel}
                   </Text>
-                  {selected && <MaterialCommunityIcons name="check" size={18} color={colors.primary} />}
+                  {selected && <MaterialCommunityIcons name="check" size={18} color={colors.primaryText} />}
                 </Pressable>
               );
             }}

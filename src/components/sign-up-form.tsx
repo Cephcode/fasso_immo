@@ -10,11 +10,11 @@ import { Label } from '@/components/ui/label';
 import { Text } from '@/components/ui/text';
 import { supabase } from '@/lib/supabase';
 import { THEME } from '@/lib/theme';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import * as React from 'react';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, TextInput, TouchableOpacity, View } from 'react-native';
 
 export function SignUpForm() {
   const router = useRouter();
@@ -33,6 +33,9 @@ export function SignUpForm() {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // Consentement à la politique de confidentialité — requis avant de créer
+  // un compte (voir src/app/legal/privacy.tsx pour le texte).
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
 
   function onEmailSubmitEditing() {
     passwordInputRef.current?.focus();
@@ -49,6 +52,11 @@ export function SignUpForm() {
 
     if (password.length < 6) {
       setErrorMessage('Le mot de passe doit contenir au moins 6 caractères.');
+      return;
+    }
+
+    if (!acceptedPrivacy) {
+      setErrorMessage('Veuillez accepter la politique de confidentialité pour continuer.');
       return;
     }
 
@@ -181,11 +189,35 @@ export function SignUpForm() {
               </View>
             </View>
 
+            {/* Consentement à la politique de confidentialité, requis avant
+                de pouvoir créer un compte (checkbox + lien vers le texte). */}
+            <Pressable
+              onPress={() => setAcceptedPrivacy((v) => !v)}
+              className="flex-row items-start gap-2.5"
+              hitSlop={4}
+            >
+              <MaterialCommunityIcons
+                name={acceptedPrivacy ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                size={20}
+                color={acceptedPrivacy ? THEME.light.primary : THEME.light.mutedForeground}
+              />
+              <Text className="flex-1 text-sm text-muted-foreground">
+                J&apos;accepte la{' '}
+                {/* `as Href` : le fichier de types de routes générées n'a pas encore
+                    été régénéré pour ce nouvel écran (nécessite `expo start`/`expo export`) —
+                    la route existe bien (src/app/legal/privacy.tsx), voir aussi le cast déjà
+                    utilisé plus haut pour `redirect`. */}
+                <Text onPress={() => router.push('/legal/privacy' as Href)} className="font-semibold text-primary-text">
+                  politique de confidentialité
+                </Text>
+              </Text>
+            </Pressable>
+
             <Button
               className="mt-2 w-full"
               size="lg"
               onPress={onSubmit}
-              disabled={loading}
+              disabled={loading || !acceptedPrivacy}
             >
               {loading ? (
                 <ActivityIndicator color={THEME.light.primaryForeground} />
@@ -199,7 +231,7 @@ export function SignUpForm() {
             Vous avez déjà un compte ?{' '}
             <Text
               onPress={() => router.push({ pathname: '/auth/login', params: redirect ? { redirect } : undefined })}
-              className="text-sm font-semibold text-primary"
+              className="text-sm font-semibold text-primary-text"
             >
               Connectez-vous
             </Text>

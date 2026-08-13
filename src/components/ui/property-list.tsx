@@ -12,7 +12,11 @@ type PropertyListProps = {
   refreshing: boolean;
   onEndReached: () => void;
   onRefresh: () => void;
-  onPressItem?: (listing: Listing) => void};
+  onPressItem?: (listing: Listing) => void;
+  /** Espace réservé en haut du contenu, sous un header flottant en verre
+   * (voir (home)/index.tsx) — 0 par défaut pour les écrans sans header flottant. */
+  headerHeight?: number;
+};
 
 export function PropertyList({
   listings,
@@ -21,6 +25,7 @@ export function PropertyList({
   onEndReached,
   onRefresh,
   onPressItem,
+  headerHeight = 0,
 }: PropertyListProps) {
   const colors = THEME.light;
 
@@ -48,7 +53,7 @@ export function PropertyList({
       onEndReachedThreshold={0.4}
       refreshing={refreshing}
       onRefresh={onRefresh}
-      contentContainerStyle={{ padding: 0, paddingBottom: 16 }}
+      contentContainerStyle={{ padding: 0, paddingTop: headerHeight, paddingBottom: 16 }}
       ListFooterComponent={
         loadingMore ? (
           <View className="py-4">

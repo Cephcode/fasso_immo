@@ -1,6 +1,7 @@
 import { GlassBlurRoot, GlassSurface } from '@/components/ui/glass-view';
 import { Text } from '@/components/ui/text';
 import { useLikedPosts } from '@/hooks/useLikedPosts';
+import { FONT_DISPLAY_BOLD } from '@/lib/fonts';
 import { formatPrice } from '@/lib/format';
 import { PROPERTY_TYPE_ICONS } from '@/lib/property-type-icons';
 import { PROPERTY_TYPE_LABELS } from '@/lib/property-type-labels';
@@ -179,12 +180,21 @@ export function PropertyDetail({
         )}
       </GlassBlurRoot>
 
-      <View className="gap-6 px-4 pt-5">
+      {/* Redesign v2 : "sheet peel" — le panneau d'infos chevauche le bas de
+          la galerie (marge négative + coins arrondis en haut), comme une
+          feuille qui se détache de la photo, au lieu de s'arrêter net dessous. */}
+      <View className="gap-6 rounded-t-[26px] bg-background px-4 pt-6" style={{ marginTop: -22 }}>
         {/* Titre + prix */}
         <View className="flex-row items-start justify-between gap-3">
-          <Text className="flex-1 text-2xl font-bold tracking-tight text-foreground">{post.title}</Text>
+          <Text
+            style={{ fontFamily: FONT_DISPLAY_BOLD }}
+            className="flex-1 text-[26px] leading-[30px] tracking-tight text-foreground"
+          >
+            {post.title}
+          </Text>
           <View className="items-end">
-            <Text className="text-lg font-bold text-primary">{formatPrice(post.price)}</Text>
+            {/* text-primary-text : orange plus sombre, requis pour l'AA sur fond blanc — voir theme.ts */}
+            <Text className="text-lg font-bold text-primary-text">{formatPrice(post.price)}</Text>
             <Text className="text-xs text-muted-foreground">/ mois</Text>
           </View>
         </View>
@@ -205,7 +215,7 @@ export function PropertyDetail({
               key={index}
               className="flex-row items-center gap-1.5 rounded-2xl bg-secondary px-3.5 py-2.5"
             >
-              <MaterialCommunityIcons name={chip.icon} size={18} color={colors.primary} />
+              <MaterialCommunityIcons name={chip.icon} size={18} color={colors.primaryText} />
               <Text className="text-sm font-semibold text-foreground">{chip.label}</Text>
             </View>
           ))}
@@ -223,14 +233,14 @@ export function PropertyDetail({
             <View className="flex-row items-center justify-between">
               <Text className="text-base font-semibold text-foreground">Localisation</Text>
               <Pressable onPress={onOpenMaps} hitSlop={8}>
-                <Text className="text-sm font-medium text-primary">Ouvrir Maps</Text>
+                <Text className="text-sm font-medium text-primary-text">Ouvrir Maps</Text>
               </Pressable>
             </View>
             <Pressable
               onPress={onOpenMaps}
               className="h-40 w-full items-center justify-center gap-2 rounded-2xl bg-secondary"
             >
-              <MaterialCommunityIcons name="map-outline" size={24} color={colors.primary} />
+              <MaterialCommunityIcons name="map-outline" size={24} color={colors.primaryText} />
               <Text className="text-sm font-medium text-muted-foreground">Voir sur Google Maps</Text>
             </Pressable>
           </View>
@@ -240,7 +250,7 @@ export function PropertyDetail({
         {owner && (
           <View className="gap-3 rounded-[22px] bg-card p-4 shadow-sm shadow-black/5">
             <Pressable onPress={onViewProfile} className="items-center rounded-full bg-secondary py-3">
-              <Text className="text-sm font-semibold text-primary">Consulter le profil</Text>
+              <Text className="text-sm font-semibold text-primary-text">Consulter le profil</Text>
             </Pressable>
           </View>
         )}

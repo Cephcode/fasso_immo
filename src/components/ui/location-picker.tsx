@@ -31,8 +31,8 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
         onPress={openMaps}
         className="flex-row items-center justify-center gap-2 rounded-full bg-secondary py-3"
       >
-        <MaterialCommunityIcons name="map-marker-outline" size={18} color={colors.primary} />
-        <Text className="text-sm font-semibold text-primary">Ouvrir Maps pour choisir un emplacement</Text>
+        <MaterialCommunityIcons name="map-marker-outline" size={18} color={colors.primaryText} />
+        <Text className="text-sm font-semibold text-primary-text">Ouvrir Maps pour choisir un emplacement</Text>
       </Pressable>
 
       <Input

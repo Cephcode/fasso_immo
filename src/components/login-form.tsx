@@ -161,7 +161,7 @@ export default function LoginForm() {
             Vous n&apos;avez pas encore de compte ?{' '}
             <Text
               onPress={() => router.push({ pathname: '/auth/sign-up', params: redirect ? { redirect } : undefined })}
-              className="text-sm font-semibold text-primary"
+              className="text-sm font-semibold text-primary-text"
             >
               Créez-en un
             </Text>

@@ -21,19 +21,23 @@ function FilterChip({
 }) {
   const colors = THEME.light;
 
+  // Redesign v2 : ces pastilles représentent une valeur choisie (ville, tri,
+  // filtres actifs), pas un bouton de sélection binaire — le remplissage
+  // orange plein est réservé aux vraies actions (CTA, choix de type de bien).
+  // Ici l'état "actif" passe donc par la pastille teintée `tint`/`tint-foreground`.
   return (
     <Pressable
       onPress={onPress}
       className={
         active
-          ? 'flex-row items-center self-start gap-1 rounded-full bg-primary px-2.5 py-1.5'
+          ? 'flex-row items-center self-start gap-1 rounded-full bg-tint px-2.5 py-1.5'
           : 'flex-row items-center self-start gap-1 rounded-full bg-secondary px-2.5 py-1.5'
       }
     >
-      <MaterialCommunityIcons name={icon} size={12} color={active ? colors.primaryForeground : colors.mutedForeground} />
+      <MaterialCommunityIcons name={icon} size={12} color={active ? colors.tintForeground : colors.mutedForeground} />
       <Text
         numberOfLines={1}
-        className={active ? 'text-xs font-semibold text-primary-foreground' : 'text-xs font-medium text-foreground'}
+        className={active ? 'text-xs font-semibold text-tint-foreground' : 'text-xs font-medium text-foreground'}
       >
         {label}
       </Text>

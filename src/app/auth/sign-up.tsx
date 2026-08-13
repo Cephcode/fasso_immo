@@ -1,13 +1,11 @@
 import { SignUpForm } from '@/components/sign-up-form';
-import { THEME } from '@/lib/theme';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LogoBadge } from '@/components/ui/logo';
 
 import { KeyboardAvoidingView, ScrollView, Text, View } from 'react-native';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function SignUpPage(){
-  const colors = THEME.light;
   const insets = useSafeAreaInsets();
 
     return (
@@ -26,9 +24,7 @@ export default function SignUpPage(){
           keyboardShouldPersistTaps="handled"
         >
           <View className="items-center gap-3">
-            <View className="h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-              <MaterialCommunityIcons name="home-city-outline" size={26} color={colors.primary} />
-            </View>
+            <LogoBadge size={56} />
             <Text className="text-[28px] font-bold tracking-tight text-foreground">Créer un compte</Text>
           </View>
           <View className="mt-8 w-full max-w-md self-center gap-6">

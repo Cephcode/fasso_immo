@@ -18,9 +18,13 @@ export function useLikedListings() {
     }
 
     setLoading(true);
+    // bedrooms_number/bathrooms_number ajoutés pour les pastilles de la
+    // carte v2 (mapRowToListing les consomme) — mêmes colonnes que useListings.
     const { data } = await supabase
       .from('posts')
-      .select('id, title, price, city, neighborhood, photos_urls, rooms_count, property_type')
+      .select(
+        'id, title, price, city, neighborhood, photos_urls, rooms_count, property_type, bedrooms_number, bathrooms_number'
+      )
       .in('id', Array.from(likedIds))
       .order('created_at', { ascending: false });
 

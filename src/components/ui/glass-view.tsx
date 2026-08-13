@@ -82,19 +82,46 @@ const BLUR_INTENSITY: Record<GlassIntensity, number> = {
   thick: 82,
 };
 
-const OVERLAY_OPACITY: Record<GlassIntensity, number> = {
-  thin: 0.35,
-  regular: 0.5,
-  thick: 0.72,
+// Redesign v2 (règle explicite du design system) : le voile blanc a deux
+// paliers. Quand le flou natif fonctionne réellement derrière lui, il reste
+// fin (.34/.46/.58) pour laisser deviner le contenu flouté — c'est ça, l'effet
+// "verre". Mais quand aucun flou n'est disponible (Android < SDK 31, pas de
+// cible de flou), un voile aussi fin ne suffit plus à distinguer la surface :
+// combiné à une photo non floutée derrière, ça donnait l'impression d'une
+// surface "grisée"/sale plutôt que d'un panneau de verre. Sans flou, le voile
+// monte donc à .82/.88/.93 (quasi opaque) : la hiérarchie visuelle tient
+// seule, sans effet de flou raté.
+const OVERLAY_OPACITY_BLURRED: Record<GlassIntensity, number> = {
+  thin: 0.34,
+  regular: 0.46,
+  thick: 0.58,
 };
+
+const OVERLAY_OPACITY_FALLBACK: Record<GlassIntensity, number> = {
+  thin: 0.82,
+  regular: 0.88,
+  thick: 0.93,
+};
+
+// `dimezisBlurViewSdk31Plus` exige Android 12 (API 31) au minimum ; en
+// dessous, expo-blur ne peut de toute façon rien flouter. `Platform.Version`
+// est déjà l'API level sur Android (contrairement à iOS où c'est une string).
+const ANDROID_BLUR_MIN_SDK = 31;
+function isAndroidBlurCapable() {
+  return Platform.OS === 'android' && typeof Platform.Version === 'number' && Platform.Version >= ANDROID_BLUR_MIN_SDK;
+}
 
 // Sans image/contenu coloré à flouter derrière (fond blanc uni), le voile
 // blanc + un flou natif indisponible ne suffisent pas à faire "exister" la
 // surface : il lui faut une ombre propre (et `elevation` pour qu'elle soit
 // visible sur Android, où shadow* seul ne suffit pas toujours) pour se
 // détacher du fond, comme les vrais matériaux "glass" d'Apple.
+// #100C08 (et non #000) : règle explicite du design system — "ombres
+// teintées chaud, jamais noir pur". Un détail, mais un gris/noir pur sur du
+// verre lit comme générique/Material ; la teinte chaude fait "matériau"
+// plutôt que "case à cocher d'ombre portée".
 const DEFAULT_GLASS_SHADOW: ViewStyle = {
-  shadowColor: '#000',
+  shadowColor: '#100C08',
   shadowOpacity: 0.08,
   shadowRadius: 14,
   shadowOffset: { width: 0, height: 5 },
@@ -145,11 +172,17 @@ export function GlassSurface({
     );
   }
 
-  // Sans `blurTarget` sur Android, `dimezisBlurViewSdk31Plus` retombe sur
-  // "none" en émettant un warning à chaque rendu : on choisit "none"
-  // explicitement dans ce cas pour rester silencieux et ne garder que le
-  // voile translucide (dégradé propre plutôt que flou natif indisponible).
-  const androidBlurMethod: BlurMethod = blurTarget ? 'dimezisBlurViewSdk31Plus' : 'none';
+  // Le flou natif ne fonctionne réellement que : sur iOS (UIVisualEffectView
+  // floute toujours ce qu'il y a derrière, sans cible) ; sur Android, unique-
+  // ment avec une `blurTarget` ET un SDK ≥ 31 (voir isAndroidBlurCapable).
+  // Sinon, `BlurView` ne peut rien flouter — on évite alors de la monter :
+  // certaines versions d'expo-blur peignent leur propre teinte de repli
+  // quand elles ne peuvent pas flouter, qui s'additionnait à notre voile et
+  // donnait cet aspect "sale"/grisé au lieu d'un panneau net.
+  const androidBlurAvailable = isAndroidBlurCapable() && blurTarget != null;
+  const blurWorks = Platform.OS === 'ios' || androidBlurAvailable;
+  const androidBlurMethod: BlurMethod = androidBlurAvailable ? 'dimezisBlurViewSdk31Plus' : 'none';
+  const overlayOpacity = (blurWorks ? OVERLAY_OPACITY_BLURRED : OVERLAY_OPACITY_FALLBACK)[intensity];
   const roundedClasses = extractRoundedClasses(className);
 
   return (
@@ -158,16 +191,16 @@ export function GlassSurface({
       style={[DEFAULT_GLASS_SHADOW, style]}
     >
       <View pointerEvents="none" className={cn('overflow-hidden', roundedClasses)} style={StyleSheet.absoluteFill}>
-        <BlurView
-          intensity={BLUR_INTENSITY[intensity]}
-          tint="light"
-          blurMethod={androidBlurMethod}
-          blurTarget={blurTarget ?? undefined}
-          style={StyleSheet.absoluteFill}
-        />
-        <View
-          style={[StyleSheet.absoluteFill, { backgroundColor: `rgba(255,255,255,${OVERLAY_OPACITY[intensity]})` }]}
-        />
+        {blurWorks && (
+          <BlurView
+            intensity={BLUR_INTENSITY[intensity]}
+            tint="light"
+            blurMethod={androidBlurMethod}
+            blurTarget={blurTarget ?? undefined}
+            style={StyleSheet.absoluteFill}
+          />
+        )}
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: `rgba(255,255,255,${overlayOpacity})` }]} />
       </View>
       {children}
     </View>

@@ -14,8 +14,15 @@
     --card-foreground: 240 10% 8%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 8%;
-    --primary: 24.7 100% 36.6%;
+    /* Redesign v2 : voir le commentaire équivalent dans src/lib/theme.ts —
+       primary = orange vif pour les surfaces pleines, primary-text = orange
+       plus sombre pour le texte/icônes d'accent sur fond clair (contraste
+       AA), tint/tint-foreground = pastille "valeur sélectionnée". */
+    --primary: 22 92% 46%;
     --primary-foreground: 0 0% 100%;
+    --primary-text: 21 90% 38%;
+    --tint: 25 83% 95%;
+    --tint-foreground: 21 90% 38%;
     --secondary: 240 20% 96%;
     --secondary-foreground: 240 10% 8%;
     --muted: 240 20% 96.5%;

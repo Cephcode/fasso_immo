@@ -34,11 +34,14 @@ function MessageBubble({ message, isMine }: { message: DiscussionMessage; isMine
 }
 
 export default function DiscussionScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, prefill } = useLocalSearchParams<{ id: string; prefill?: string }>();
   const colors = THEME.light;
   const insets = useSafeAreaInsets();
   const { messages, currentUserId, postTitle, loading, sending, error, sendMessage } = useDiscussion(id);
-  const [draft, setDraft] = useState('');
+  // Pré-rempli par "Je suis intéressé" depuis la fiche annonce (voir
+  // property/[id].tsx) — état initial seulement : l'utilisateur reste libre
+  // de le modifier ou de l'effacer avant d'envoyer.
+  const [draft, setDraft] = useState(prefill ?? '');
   const listRef = useRef<FlashListRef<Row>>(null);
 
   // Remplace KeyboardAvoidingView : sous Android 15+/edge-to-edge,

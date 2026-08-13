@@ -62,7 +62,8 @@ export default function FiltersScreen() {
         </Pressable>
         <Text className="flex-1 text-lg font-bold tracking-tight text-foreground">Filtres</Text>
         <Pressable onPress={reset} hitSlop={8}>
-          <Text className="text-sm font-medium text-primary">Réinitialiser</Text>
+          {/* text-primary-text (et non text-primary) : orange plus sombre, requis pour l'AA sur fond blanc — voir theme.ts */}
+          <Text className="text-sm font-medium text-primary-text">Réinitialiser</Text>
         </Pressable>
       </View>
 
@@ -73,18 +74,20 @@ export default function FiltersScreen() {
       >
         <View className="gap-2">
           <SectionLabel>Trier par loyer</SectionLabel>
-          <View className="flex-row gap-2">
+          {/* Redesign v2 : contrôle segmenté neutre (piste grise, option
+              active = pastille blanche + ombre légère) — pas de couleur,
+              contrairement aux boutons de sélection (type de bien, etc). */}
+          <View className="flex-row gap-1 rounded-full bg-secondary p-1">
             {SORT_OPTIONS.map((opt) => {
               const active = draft.priceSort === opt.value;
               return (
                 <Pressable
                   key={opt.label}
                   onPress={() => patchDraft({ priceSort: opt.value })}
-                  className={
-                    active ? 'flex-1 items-center rounded-full bg-primary py-2.5' : 'flex-1 items-center rounded-full bg-secondary py-2.5'
-                  }
+                  className={active ? 'flex-1 items-center rounded-full bg-background py-2.5' : 'flex-1 items-center rounded-full py-2.5'}
+                  style={active ? { shadowColor: '#100C08', shadowOpacity: 0.08, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 } : undefined}
                 >
-                  <Text className={active ? 'text-sm font-semibold text-primary-foreground' : 'text-sm font-medium text-foreground'}>
+                  <Text className={active ? 'text-sm font-semibold text-foreground' : 'text-sm text-muted-foreground'}>
                     {opt.label}
                   </Text>
                 </Pressable>

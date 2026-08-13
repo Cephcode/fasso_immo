@@ -13,6 +13,14 @@ module.exports = {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          // Redesign v2 : orange d'accent pour texte/icônes sur fond clair
+          // (contraste AA) — distinct de `primary` (surfaces pleines).
+          // Utilisable via `text-primary-text`.
+          text: "hsl(var(--primary-text))",
+        },
+        tint: {
+          DEFAULT: "hsl(var(--tint))",
+          foreground: "hsl(var(--tint-foreground))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",

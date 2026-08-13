@@ -7,17 +7,6 @@ import { useCallback, useEffect, useState } from 'react';
 const PAGE_SIZE = 10;
 
 export function mapRowToListing(row: any): Listing {
-  // Pas le nombre de pièces sur la carte : chambres + (salon ou garage),
-  // les infos qui aident vraiment à trier un logement au premier coup d'œil.
-  const features: Listing['features'] = [
-    ...(row.bedrooms_number != null ? [{ icon: 'bed-outline' as const, label: `${row.bedrooms_number} ch.` }] : []),
-    ...(row.livingrooms_number != null
-      ? [{ icon: 'sofa-outline' as const, label: `${row.livingrooms_number} salon${row.livingrooms_number > 1 ? 's' : ''}` }]
-      : row.garage_cars_number > 0
-        ? [{ icon: 'garage-variant' as const, label: `${row.garage_cars_number} garage` }]
-        : []),
-  ];
-
   return {
     id: row.id,
     title: row.title,
@@ -25,7 +14,11 @@ export function mapRowToListing(row: any): Listing {
     city: row.city,
     neighborhood: row.neighborhood,
     coverPhotoUrl: toImageUrl(row.photos_urls?.['1'] ?? ''),
-    features,
+    // Redesign v2 : pastilles chambres/salles de bain sur la carte — voir
+    // property-card.tsx. `null` (pas 0) quand l'annonce ne renseigne pas le
+    // champ, pour ne pas afficher "0 ch." sur un terrain par exemple.
+    bedrooms: row.bedrooms_number ?? null,
+    bathrooms: row.bathrooms_number ?? null,
   };
 }
 

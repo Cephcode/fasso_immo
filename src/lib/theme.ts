@@ -11,9 +11,18 @@ export const THEME = {
     cardForeground: 'hsl(240 10% 8%)',
     popover: 'hsl(0 0% 100%)',
     popoverForeground: 'hsl(240 10% 8%)',
-    primary: 'hsl(24.7 100% 36.6%)',
+    // Redesign v2 : orange plus vif (#E2590A) réservé aux surfaces pleines
+    // (boutons, pastilles actives, icône active de la tab bar). Sur fond
+    // blanc/clair, ce orange tombe sous le seuil de contraste AA pour du
+    // texte — `primaryText` (#B8460A) le remplace alors pour le texte et les
+    // icônes d'accent, `tint`/`tintForeground` (#FDF2EA / #B8460A) pour les
+    // pastilles "valeur sélectionnée" (ex. la ville active dans les filtres).
+    primary: 'hsl(22 92% 46%)',
     primaryForeground: 'hsl(0 0% 100%)',
     primaryForegroundSecond: 'hsl(240 20% 98%)',
+    primaryText: 'hsl(21 90% 38%)',
+    tint: 'hsl(25 83% 95%)',
+    tintForeground: 'hsl(21 90% 38%)',
     placeholder: 'hsl(240 5% 55%)',
     secondary: 'hsl(240 20% 96%)',
     secondaryForeground: 'hsl(240 10% 8%)',

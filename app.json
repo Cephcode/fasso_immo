@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "fasso_immo",
+    "name": "Fasso immo",
     "slug": "fasso_immo",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,11 +9,14 @@
     "userInterfaceStyle": "light",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.ceph-code.fasso-immo"
+      "bundleIdentifier": "com.ceph-code.fasso-immo",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#E2590A",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -32,7 +35,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#FFFFFF",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
@@ -49,7 +52,7 @@
       [
         "expo-notifications",
         {
-          "color": "#208AEF"
+          "color": "#E2590A"
         }
       ],
       "expo-video"

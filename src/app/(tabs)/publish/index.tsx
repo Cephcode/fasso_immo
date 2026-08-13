@@ -8,6 +8,7 @@ import { Text } from '@/components/ui/text';
 import { VideoPicker } from '@/components/ui/video-picker';
 import { useAuth } from '@/hooks/useAuth';
 import { useCreatePost } from '@/hooks/useCreatePost';
+import { FONT_DISPLAY_BOLD } from '@/lib/fonts';
 import { PROPERTY_TYPE_ICONS } from '@/lib/property-type-icons';
 import { PROPERTY_TYPE_LABELS } from '@/lib/property-type-labels';
 import { toImageUrl, toVideoUrl } from '@/lib/storage';
@@ -199,7 +200,9 @@ export default function PublishScreen() {
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
         <ScrollView
           contentContainerStyle={{
-            paddingTop: 16,
+            // Redesign v2 : plus de header global (voir (tabs)/_layout.tsx)
+            // — insets.top requis ici, sinon le titre démarre sous l'encoche.
+            paddingTop: insets.top + 16,
             paddingHorizontal: 16,
             paddingBottom: insets.bottom + 110,
             gap: 22,
@@ -208,7 +211,7 @@ export default function PublishScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View className="gap-1">
-            <Text className="text-2xl font-bold tracking-tight text-foreground">
+            <Text style={{ fontFamily: FONT_DISPLAY_BOLD }} className="text-[28px] tracking-tight text-foreground">
               {isEditing ? "Modifier l'annonce" : 'Publier une annonce'}
             </Text>
             <Text className="text-sm text-muted-foreground">

@@ -31,8 +31,8 @@ export function SignInRequired({
       className="flex-1 items-center justify-center gap-4 bg-background px-8"
       style={{ paddingBottom: insets.bottom }}
     >
-      <View className="h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-        <MaterialCommunityIcons name="lock-outline" size={26} color={colors.primary} />
+      <View className="h-14 w-14 items-center justify-center rounded-2xl bg-tint">
+        <MaterialCommunityIcons name="lock-outline" size={26} color={colors.tintForeground} />
       </View>
       <View className="gap-1">
         <Text className="text-center text-lg font-semibold text-foreground">{title}</Text>

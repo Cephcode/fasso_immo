@@ -1,6 +1,7 @@
 import { PropertyDetail } from '@/components/ui/property-details';
 import { Text } from '@/components/ui/text';
 import { getOrCreateDiscussion } from '@/lib/discussions';
+import { formatInterestMessage } from '@/lib/format';
 import { supabase } from '@/lib/supabase';
 import { THEME } from '@/lib/theme';
 import type { Post } from '@/types/listing';
@@ -66,6 +67,23 @@ export default function PropertyDetailScreen() {
     }
   };
 
+  // "Je suis intéressé" : même discussion que "Message", mais avec un
+  // message pré-rempli côté écran de discussion (voir la query `prefill` et
+  // discussion/[id].tsx) — l'utilisateur peut encore le modifier avant
+  // d'envoyer, on ne l'envoie jamais automatiquement à sa place.
+  const handleInterestedPress = async () => {
+    try {
+      const discussionId = await getOrCreateDiscussion(post.user_id, post.id);
+      router.push({
+        pathname: '/discussion/[id]',
+        params: { id: discussionId, prefill: formatInterestMessage(post.title) },
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Impossible d'ouvrir la discussion.";
+      Alert.alert('Message impossible', message);
+    }
+  };
+
   const handleOpenMaps = () => {
     if (post.location_url) Linking.openURL(post.location_url);
   };
@@ -75,6 +93,7 @@ export default function PropertyDetailScreen() {
       post={post}
       onBack={() => router.back()}
       onContactPress={handleContactPress}
+      onInterestedPress={handleInterestedPress}
       onOpenMaps={handleOpenMaps}
     />
   );

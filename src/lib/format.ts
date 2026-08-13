@@ -49,3 +49,16 @@ export function formatMessageDateSeparator(iso: string) {
 export function formatMessageTime(iso: string) {
   return new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 }
+
+/** "Bonjour" le jour, "Bonsoir" passé 18h — utilisé pour le message
+ * pré-rempli du bouton "Je suis intéressé" (voir property/[id].tsx). */
+function timeOfDayGreeting() {
+  return new Date().getHours() < 18 ? 'Bonjour' : 'Bonsoir';
+}
+
+/** Message pré-rempli quand on ouvre une discussion depuis "Je suis
+ * intéressé" sur une fiche annonce — l'utilisateur peut encore le modifier
+ * avant de l'envoyer, voir discussion/[id].tsx. */
+export function formatInterestMessage(postTitle: string) {
+  return `${timeOfDayGreeting()}, je suis intéressé(e) par votre annonce « ${postTitle} ». Est-elle toujours disponible ?`;
+}

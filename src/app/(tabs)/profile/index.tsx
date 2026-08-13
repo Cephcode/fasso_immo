@@ -2,6 +2,7 @@ import { SignInRequired } from '@/components/ui/sign-in-required';
 import { Text } from '@/components/ui/text';
 import { useAuth } from '@/hooks/useAuth';
 import { mapRowToListing } from '@/hooks/useListings';
+import { FONT_DISPLAY_BOLD } from '@/lib/fonts';
 import { formatPrice } from '@/lib/format';
 import { PHOTO_BUCKET, VIDEO_BUCKET } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
@@ -42,7 +43,7 @@ function MyPostCard({ post, onEdit, onDelete }: { post: MyPost; onEdit: () => vo
         <Text className="text-xs text-muted-foreground">
           {post.listing.city}, {post.listing.neighborhood}
         </Text>
-        <Text className="text-sm font-bold text-primary">{formatPrice(post.listing.price)}</Text>
+        <Text className="text-sm font-bold text-primary-text">{formatPrice(post.listing.price)}</Text>
       </View>
       <View className="justify-center gap-2">
         <Pressable
@@ -72,6 +73,7 @@ export default function ProfileScreen() {
   const [user, setUser] = useState<UserInfo | null>(null);
   const [posts, setPosts] = useState<MyPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -153,6 +155,57 @@ export default function ProfileScreen() {
     ]);
   };
 
+  // Suppression de compte (obligatoire pour la conformité App Store,
+  // règle 5.1.1(v) : toute app qui permet de créer un compte doit aussi
+  // permettre de le supprimer). Nettoie d'abord le storage (photos/vidéos
+  // des annonces, même logique que handleDelete ci-dessus) puis appelle la
+  // fonction Postgres `delete_own_account` — voir le SQL fourni séparément,
+  // à exécuter dans Supabase avant que ce bouton fonctionne. Cette fonction
+  // supprime aussi les annonces/discussions/messages/likes/jeton push liés,
+  // et enfin la ligne `auth.users` elle-même.
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Supprimer définitivement ton compte ?',
+      'Tes annonces, favoris, discussions et messages seront supprimés. Cette action est irréversible.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer mon compte',
+          style: 'destructive',
+          onPress: async () => {
+            setDeletingAccount(true);
+
+            // Nettoyage du storage : best-effort, jamais bloquant. Avant ce
+            // correctif, une erreur ici (fichier déjà absent, hoquet réseau,
+            // etc.) faisait échouer TOUTE la suppression — y compris la
+            // ligne RPC pourtant critique — laissant le compte intact et
+            // l'utilisateur toujours connecté sans suppression réelle.
+            try {
+              const photoPaths = posts.flatMap((p) => p.photoPaths);
+              const videoPaths = posts.flatMap((p) => p.videoPaths);
+              if (photoPaths.length > 0) await supabase.storage.from(PHOTO_BUCKET).remove(photoPaths);
+              if (videoPaths.length > 0) await supabase.storage.from(VIDEO_BUCKET).remove(videoPaths);
+            } catch (err) {
+              console.warn('[handleDeleteAccount] échec nettoyage storage (non bloquant):', err);
+            }
+
+            try {
+              const { error } = await supabase.rpc('delete_own_account');
+              if (error) throw error;
+
+              await supabase.auth.signOut();
+              router.replace('/(tabs)/(home)');
+            } catch (err) {
+              setDeletingAccount(false);
+              const detail = err instanceof Error ? err.message : String(err);
+              Alert.alert('Suppression impossible', `Le compte n'a pas pu être supprimé. ${detail}`);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (isLoggedIn === null || loading) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
@@ -166,17 +219,22 @@ export default function ProfileScreen() {
   }
 
   return (
+    // Redesign v2 : plus de header global (voir (tabs)/_layout.tsx) — la
+    // zone de sécurité du haut doit être gérée ici, sinon la carte profil
+    // démarre sous l'encoche/la barre de statut.
     <ScrollView
       className="flex-1 bg-background"
-      contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 24, gap: 20 }}
+      contentContainerStyle={{ paddingHorizontal: 16, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24, gap: 20 }}
       showsVerticalScrollIndicator={false}
     >
       <View className="items-center gap-3 rounded-[22px] bg-card p-5 shadow-sm shadow-black/5">
-        <View className="h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-          <MaterialCommunityIcons name="account-outline" size={30} color={colors.primary} />
+        <View className="h-16 w-16 items-center justify-center rounded-full bg-tint">
+          <MaterialCommunityIcons name="account-outline" size={30} color={colors.tintForeground} />
         </View>
         <View className="items-center gap-0.5">
-          <Text className="text-lg font-semibold text-foreground">{user.fullName}</Text>
+          <Text style={{ fontFamily: FONT_DISPLAY_BOLD }} className="text-[22px] tracking-tight text-foreground">
+            {user.fullName}
+          </Text>
           <Text className="text-sm text-muted-foreground">{user.email}</Text>
         </View>
         <Pressable onPress={handleSignOut} hitSlop={8} className="mt-1 rounded-full bg-secondary px-4 py-2">
@@ -202,6 +260,21 @@ export default function ProfileScreen() {
             />
           ))
         )}
+      </View>
+
+      {/* Suppression de compte — exigée par l'App Store (règle 5.1.1(v)),
+          volontairement discrète (texte simple, pas un bouton plein) : c'est
+          une action rare et irréversible, pas une action courante. */}
+      <View className="gap-1 rounded-[22px] bg-card px-4 py-1 shadow-sm shadow-black/5">
+        <Pressable
+          onPress={handleDeleteAccount}
+          disabled={deletingAccount}
+          hitSlop={8}
+          className="flex-row items-center justify-between py-3.5"
+        >
+          <Text className="text-sm font-medium text-destructive">Supprimer mon compte</Text>
+          {deletingAccount && <ActivityIndicator size="small" color={colors.destructive} />}
+        </Pressable>
       </View>
     </ScrollView>
   );
